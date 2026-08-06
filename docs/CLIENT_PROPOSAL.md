@@ -125,7 +125,7 @@ For the development and testing phase, we propose a **Contabo VPS** (Virtual Pri
 │  │  ──────────────                                                        │  │
 │  │                                                                         │  │
 │  │  vCPUs:           4 Cores                                              │  │
-│  │  RAM:             6 GB                                                 │  │
+│  │  RAM:             8 GB                                                 │  │
 │  │  Storage:         100 GB SSD                                           │  │
 │  │  Bandwidth:       Unlimited (Fair Use)                                 │  │
 │  │  Operating System: Ubuntu 22.04 LTS                                    │  │
@@ -229,7 +229,7 @@ Cloudflare will serve as the primary DNS and security layer:
 | Aspect | Development (VPS) | Production (VDS) |
 |--------|-------------------|------------------|
 | **CPU** | 4 vCPUs (Shared) | 6 vCPUs (Dedicated) |
-| **RAM** | 6 GB | 24 GB |
+| **RAM** | 8 GB | 24 GB |
 | **Storage** | 100 GB SSD | 180 GB NVMe |
 | **Monthly Cost** | ~$6 (~KSH 780) | ~$40 (~KSH 5,200) |
 | **Use Case** | Development, Testing | Live Production |
