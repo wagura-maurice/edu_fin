@@ -329,46 +329,47 @@ When multiple obligors are assigned to a single loan facility:
 │                        EduFin Kenya Platform                        │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐                 │
-│  │   Public    │  │  Onboarding │  │   Client    │                 │
-│  │   Website   │  │    Portal   │  │   Portal    │                 │
-│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘                 │
-│         │                │                │                         │
-│         └────────────────┼────────────────┘                         │
-│                          │                                          │
-│                    ┌─────┴─────┐                                    │
-│                    │    API    │                                    │
-│                    │   Layer   │                                    │
-│                    └─────┬─────┘                                    │
-│                          │                                          │
-│    ┌─────────────────────┼─────────────────────┐                   │
-│    │                     │                     │                    │
-│    ▼                     ▼                     ▼                    │
-│ ┌──────┐           ┌──────────┐         ┌───────────┐              │
-│ │ KYC  │           │ Document │         │Notification│              │
-│ │Engine│           │ Storage  │         │  Service   │              │
-│ └──────┘           └──────────┘         └───────────┘              │
+│  ┌─────────────────────────────────┐  ┌──────────────────────────┐ │
+│  │  WORDPRESS (edufin.co.ke)       │  │  LARAVEL (app.edufin.co.ke)│ │
+│  │  Public Website                 │  │  Application              │ │
+│  │  • Marketing, Blog, SEO         │  │  • Login (/login)         │ │
+│  │  • Links to Laravel app         │  │  • Register (/register)   │ │
+│  │    for login & registration     │  │  • Dashboard (/dashboard) │ │
+│  └─────────────────────────────────┘  │  • Admin (/admin)         │ │
+│                                       │  • REST API               │ │
+│                                       │    (edufin.co.ke/api/v1)  │ │
+│                                       └─────────────┬────────────┘ │
+│                                                     │              │
+│    ┌────────────────────────────────────────────────┼────────┐    │
+│    │                     │                          │        │    │
+│    ▼                     ▼                          ▼        ▼    │
+│ ┌──────┐           ┌──────────┐         ┌───────────┐  ┌──────┐  │
+│ │ KYC  │           │ Document │         │Notification│  │Core  │  │
+│ │Engine│           │ Storage  │         │  Service   │  │Banking│  │
+│ └──────┘           └──────────┘         └───────────┘  └──────┘  │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │   Core Banking      │
-                    │   System (External) │
-                    └─────────────────────┘
 ```
 
 ### Component Description
 
-| Component | Purpose |
-|-----------|---------|
-| Public Website | Marketing, product information, package display |
-| Onboarding Portal | KYC workflows, document upload, application forms |
-| Client Portal | Account management, statements, loan tracking |
-| API Layer | RESTful services, authentication, data validation |
-| KYC Engine | Identity verification, document validation |
-| Document Storage | Secure storage for legal documents, collateral proofs |
-| Notification Service | Email and SMS alert management |
+| Component | Location | Purpose |
+|-----------|----------|---------|
+| Public Website | `edufin.co.ke` (WordPress) | Marketing, product information, blog |
+| Login & Registration | `app.edufin.co.ke/login`, `/register` (Laravel) | User authentication and onboarding |
+| Client Portal | `app.edufin.co.ke/dashboard` (Laravel/Livewire) | Account management, statements, loan tracking |
+| Admin Panel | `app.edufin.co.ke/admin` (Laravel/Filament) | Staff administration, review workflows |
+| API Layer | `edufin.co.ke/api/v1` (Laravel, path-based) | RESTful services for mobile app, webhooks, integrations |
+| KYC Engine | Laravel application | Identity verification, document validation |
+| Document Storage | Cloudflare R2 (`cdn.edufin.co.ke`) | Secure storage for legal documents, collateral proofs |
+| Notification Service | Laravel application | Email and SMS alert management |
+| Core Banking System | External | Financial operations, disbursements, payment processing |
+
+> **Routing Notes:**
+> - The REST API is served via path-based routing at `edufin.co.ke/api/v1/...` (Nginx proxies `/api/` to Laravel)
+> - All users log in at `app.edufin.co.ke/login`; after authentication, role-based redirect sends clients to `/dashboard` and staff to `/admin`
+> - User onboarding/registration occurs at `app.edufin.co.ke/register`
+> - WordPress and Laravel are independent systems; WordPress links to the Laravel app via standard HTTP links
 
 ---
 
@@ -440,7 +441,7 @@ When multiple obligors are assigned to a single loan facility:
 | PW-02 | Present education financing products/packages | High |
 | PW-03 | Show financing limits by education level | High |
 | PW-04 | Provide loan calculator functionality | Medium |
-| PW-05 | Enable user registration/login | High |
+| PW-05 | Link to application login/registration (app.edufin.co.ke/login, app.edufin.co.ke/register) | High |
 | PW-06 | Mobile-responsive design | High |
 
 ### 6.2 Onboarding System
@@ -1124,6 +1125,7 @@ All notifications must include:
 |---------|------|--------|---------|
 | 1.0 | 2026-08-06 | EduFin Team | Initial documentation |
 | 1.1 | 2026-08-06 | EduFin Team | Refined role taxonomy; replaced familial labels with functional/legal role-based terminology; added liability transition framework; updated data models for obligor assignments |
+| 1.2 | 2026-08-06 | EduFin Team | Updated routing: API at edufin.co.ke/api/v1 (path-based); admin at app.edufin.co.ke/admin; login at app.edufin.co.ke/login with role-based redirect; onboarding at app.edufin.co.ke/register |
 
 ---
 

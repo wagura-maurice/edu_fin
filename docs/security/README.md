@@ -15,7 +15,7 @@ EduFin implements a multi-layered security architecture.
 
 ## Documentation
 
-- [Authentication & SSO](./authentication.md)
+- [Authentication & Access Control](./authentication.md)
 - [Authorization & RBAC](./authorization.md)
 - [Data Protection](./data-protection.md)
 

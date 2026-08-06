@@ -44,9 +44,9 @@ Laravel serves as the **central engine** of the EduFin platform, powering all bu
 │  │                     API LAYER                                            │  │
 │  │                     (Mobile & Integrations)                             │  │
 │  │                                                                          │  │
-│  │  • REST API for Flutter App        • WordPress SSO Integration          │  │
-│  │  • JWT Authentication              • Webhook Receivers                  │  │
-│  │  • Rate Limiting                   • API Versioning                     │  │
+│  │  • REST API for Flutter App        • Webhook Receivers                  │  │
+│  │  • JWT Authentication              • API Versioning                     │  │
+│  │  • Rate Limiting                                                        │  │
 │  │                                                                          │  │
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                 │
@@ -95,7 +95,7 @@ Laravel serves as the **central engine** of the EduFin platform, powering all bu
 
 ### 2. Admin Panel (Filament)
 
-**URL:** `admin.edufin.co.ke`
+**URL:** `app.edufin.co.ke/admin`
 
 **Features:**
 - User & role management
@@ -109,16 +109,14 @@ Laravel serves as the **central engine** of the EduFin platform, powering all bu
 
 ### 3. REST API
 
-**URL:** `api.edufin.co.ke/api/v1`
+**URL:** `edufin.co.ke/api/v1`
 
 **Consumers:**
 - Flutter mobile app (iOS/Android)
-- WordPress (SSO, public data)
 - Future partner integrations
 
 **Authentication:**
 - JWT (Sanctum) for mobile
-- API Key for WordPress
 - Signature verification for webhooks
 
 ### 4. Background Services (Horizon)
@@ -153,11 +151,8 @@ app/Services/
 │   ├── SmsService.php              # SMS dispatch
 │   └── PushNotificationService.php # Push notifications
 │
-├── Document/
-│   └── DocumentStorageService.php  # R2 storage
-│
-└── Sso/
-    └── SsoService.php              # SSO management
+└── Document/
+    └── DocumentStorageService.php  # R2 storage
 ```
 
 ## Database Schema
@@ -172,8 +167,6 @@ app/Services/
 - `documents` - Document metadata
 - `payments` - Payment records
 - `audit_logs` - Audit trail
-- `sso_tokens` - SSO tokens
-- `sso_sessions` - SSO sessions
 
 ## Security Implementation
 

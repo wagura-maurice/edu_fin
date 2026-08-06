@@ -22,7 +22,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  • Public-facing brand presence                                                │
 │  • Marketing content management                                                │
 │  • SEO optimization                                                            │
-│  • Lead generation (forms submit to Laravel)                                   │
+│  • Links to Laravel portal for login & registration                            │
 │                                                                                 │
 │  MANAGED BY:                                                                   │
 │  • Secretarial staff (content)                                                 │
@@ -35,10 +35,10 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  ✗ Financial transactions                                                      │
 │  ✗ Any PII beyond basic WP users                                              │
 │                                                                                 │
-│  INTEGRATION WITH LARAVEL:                                                     │
-│  • SSO authentication (redirect to Laravel)                                    │
-│  • Public data fetch (packages, rates)                                         │
-│  • Form submissions (inquiries to Laravel API)                                 │
+│  LINKS TO LARAVEL:                                                             │
+│  • Login button → app.edufin.co.ke/login                                       │
+│  • Register button → app.edufin.co.ke/register                                 │
+│  • Standard HTML links (no API or SSO integration)                             │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -48,7 +48,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 | Content Type | Description | Update Frequency |
 |--------------|-------------|------------------|
 | Company Profile | About, mission, team | Monthly |
-| Product Catalog | Financing packages (from API) | Real-time |
+| Product Catalog | Financing packages | As needed |
 | Blog/News | Articles, announcements | Weekly |
 | FAQs | Help content | As needed |
 | Testimonials | Client reviews | Monthly |
@@ -67,27 +67,10 @@ WordPress serves as the **standalone company landing page**, completely decouple
 
 ## Custom Plugins
 
-### EduFin SSO (`edufin-sso`)
-Handles Single Sign-On with Laravel portal.
+WordPress does not use custom plugins for Laravel integration. Login and registration buttons on the WordPress site link directly to the Laravel portal via standard HTML links:
 
-**Features:**
-- Redirects login to Laravel SSO
-- Validates SSO tokens from Laravel
-- Creates WordPress sessions for authenticated users
-- Handles logout synchronization
-
-### EduFin API (`edufin-api`)
-Fetches public data from Laravel API.
-
-**Features:**
-- Caches API responses
-- Provides shortcodes for dynamic content
-- Submits contact forms to Laravel
-
-**Shortcodes:**
-- `[edufin_products]` - Display financing packages
-- `[edufin_calculator]` - Loan calculator widget
-- `[edufin_login_button]` - Login/portal button
+- **Login:** `app.edufin.co.ke/login`
+- **Register:** `app.edufin.co.ke/register`
 
 ## Approved Third-Party Plugins
 

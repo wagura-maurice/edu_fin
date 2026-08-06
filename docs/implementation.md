@@ -15,7 +15,7 @@
 3. [Laravel Implementation](#3-laravel-implementation)
 4. [Database Architecture](#4-database-architecture)
 5. [API Implementation](#5-api-implementation)
-6. [Authentication & SSO](#6-authentication--sso)
+6. [Authentication](#6-authentication)
 7. [Core Banking Integration](#7-core-banking-integration)
 8. [Security Implementation](#8-security-implementation)
 9. [Deployment & Infrastructure](#9-deployment--infrastructure)
@@ -47,7 +47,6 @@ edufin/
 │   ├── wp-content/
 │   │   ├── themes/edufin/         # Custom theme
 │   │   └── plugins/
-│   │       ├── edufin-sso/        # SSO integration
 │   │       └── edufin-api/        # API client
 │   └── wp-config.php
 │
@@ -75,7 +74,7 @@ edufin/
 ### 1.3 Communication Patterns
 
 ```
-WordPress ──► Laravel API (HTTPS + API Key) ──► Read public data, SSO
+WordPress ──► Links to app.edufin.co.ke/login & /register (standard HTML links)
 Laravel ──► Core Banking (HTTPS + mTLS) ──► Financial operations
 Mobile App ──► Laravel API (HTTPS + JWT) ──► Full client functionality
 ```
@@ -90,7 +89,7 @@ WordPress serves **exclusively** as the company landing page:
 - Decoupled from core application logic
 - Managed by secretarial staff
 - Contains NO business data or PII
-- Communicates with Laravel only for SSO and public data
+- Links to Laravel portal for login and registration (standard HTML links)
 
 ### 2.2 Theme Structure
 
@@ -119,26 +118,10 @@ wordpress/wp-content/themes/edufin/
 
 ### 2.3 Custom Plugins
 
-#### EduFin SSO Plugin
-Handles Single Sign-On with Laravel portal.
+WordPress does not consume Laravel APIs. The login and registration buttons on WordPress link directly to the Laravel portal via standard HTML links:
 
-**Key Functions:**
-- `check_sso_session()` - Validates SSO cookie on each request
-- `handle_sso_callback()` - Processes redirect from Laravel with token
-- `custom_login_url()` - Redirects login to Laravel SSO
-
-#### EduFin API Plugin
-Fetches public data from Laravel API.
-
-**Key Functions:**
-- `get_packages()` - Fetch financing packages
-- `get_calculator_rates()` - Fetch loan calculator rates
-- `submit_inquiry()` - Submit contact form to Laravel
-
-**Shortcodes:**
-- `[edufin_products]` - Display financing packages
-- `[edufin_calculator]` - Loan calculator widget
-- `[edufin_login_button]` - Login/portal button
+- **Login:** `app.edufin.co.ke/login`
+- **Register:** `app.edufin.co.ke/register`
 
 ### 2.4 Configuration
 
@@ -146,9 +129,10 @@ Fetches public data from Laravel API.
 // wp-config.php
 
 // EduFin Integration
-define('EDUFIN_API_URL', 'https://api.edufin.co.ke');
-define('EDUFIN_API_KEY', getenv('EDUFIN_API_KEY'));
-define('EDUFIN_PORTAL_URL', 'https://app.edufin.co.ke');
+// WordPress links to the Laravel portal for login and registration:
+//   Login:    https://app.edufin.co.ke/login
+//   Register: https://app.edufin.co.ke/register
+// WordPress does NOT consume Laravel APIs (no SSO, no API integration).
 
 // Security
 define('DISALLOW_FILE_EDIT', true);
@@ -183,7 +167,6 @@ Laravel serves as the **core application engine**:
 
 3. **API Layer** (Mobile & Integrations)
    - REST API for Flutter app
-   - WordPress integration endpoints
    - Webhook receivers
 
 4. **Banking Integration**
@@ -217,8 +200,6 @@ laravel/app/
 │   │   │   ├── AuthController.php
 │   │   │   ├── LoanController.php
 │   │   │   └── PublicController.php
-│   │   └── Sso/
-│   │       └── SsoController.php
 │   │
 │   ├── Livewire/              # Portal components
 │   │   └── Portal/
@@ -259,17 +240,12 @@ laravel/app/
     │   └── KycVerificationService.php
     ├── Loan/
     │   └── LoanApplicationService.php
-    ├── Notification/
-    │   ├── EmailService.php
-    │   └── SmsService.php
-    └── Sso/
-        └── SsoService.php
+    └── Notification/
+        ├── EmailService.php
+        └── SmsService.php
 ```
 
 ### 3.3 Key Services
-
-#### SsoService
-Manages SSO tokens and sessions for WordPress integration.
 
 #### CoreBankingService
 Handles all communication with Core Banking System:
@@ -313,8 +289,6 @@ Processes loan applications:
 | `documents` | Document metadata |
 | `payments` | Payment records |
 | `audit_logs` | Comprehensive audit trail |
-| `sso_tokens` | One-time SSO tokens |
-| `sso_sessions` | Persistent SSO sessions |
 
 ### 4.3 Entity Relationships
 
@@ -335,17 +309,12 @@ LoanFacility (1) ──► (N) Document
 ### 5.1 API Structure
 
 ```
-api.edufin.co.ke/api/v1/
+edufin.co.ke/api/v1/
 │
 ├── /public (API key auth)
 │   ├── GET  /packages
 │   ├── GET  /calculator/rates
 │   └── POST /inquiries
-│
-├── /sso (API key auth - WordPress)
-│   ├── POST /validate
-│   ├── POST /session
-│   └── GET  /me
 │
 ├── /auth
 │   ├── POST /register
@@ -392,7 +361,6 @@ api.edufin.co.ke/api/v1/
 | Endpoint Type | Method | Header |
 |---------------|--------|--------|
 | Public | API Key | `X-API-Key: {key}` |
-| SSO | API Key | `X-API-Key: {key}` |
 | Authenticated | JWT | `Authorization: Bearer {token}` |
 | Webhooks | Signature | `X-Webhook-Signature: {sig}` |
 
@@ -400,7 +368,7 @@ api.edufin.co.ke/api/v1/
 
 ---
 
-## 6. Authentication & SSO
+## 6. Authentication
 
 ### 6.1 Authentication Architecture
 
@@ -410,25 +378,28 @@ Laravel serves as the **Identity Provider** for all platforms:
 |----------|-------------|---------|
 | Portal (Web) | Session | Redis |
 | Mobile App | JWT (Sanctum) | Stateless |
-| WordPress | SSO Token | Redis |
 
-### 6.2 SSO Flow
+### 6.2 Login & Role-Based Redirect
 
-1. User clicks "Login" on WordPress
-2. WordPress redirects to `app.edufin.co.ke/sso/login`
-3. User authenticates on Laravel
-4. Laravel generates one-time token + SSO session
-5. Laravel redirects back to WordPress with token
-6. WordPress validates token via API
-7. WordPress creates local session
+All users (clients and staff) access the login interface at the same URL:
+
+- **Login:** `app.edufin.co.ke/login`
+- **Register:** `app.edufin.co.ke/register`
+
+After a successful login, the system redirects users to their respective dashboards based on their assigned roles:
+
+| Role | Redirect Destination |
+|------|---------------------|
+| Client | `app.edufin.co.ke/dashboard` |
+| Staff (Loan Officer, KYC Verifier, System Admin, Super Admin) | `app.edufin.co.ke/admin` |
 
 ### 6.3 Key Components
 
-- `SsoService` - Token/session management
-- `SsoController` - SSO endpoints
-- WordPress `EduFin_SSO` plugin - WordPress integration
+- Laravel session-based authentication for web portal
+- Sanctum JWT tokens for mobile API access
+- Role-based redirect middleware for post-login routing
 
-> **Full SSO implementation:** [IMPLEMENTATION_PLAN.md](../IMPLEMENTATION_PLAN.md) Section 3
+> **Full authentication documentation:** [security/authentication.md](./security/authentication.md)
 
 ---
 

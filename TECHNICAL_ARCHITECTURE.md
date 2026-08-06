@@ -91,33 +91,31 @@ This document defines the technical architecture for the EduFin dual-platform ec
 │   • SSL/TLS Termination     • DDoS Mitigation                     • Rate Limiting                  │
 │   • CDN (Static Assets)     • Geo-blocking (if required)          • Access Rules                   │
 │                                                                                                     │
-│         │ edufin.co.ke              │ app.edufin.co.ke                │ api.edufin.co.ke          │
-└─────────┬───────────────────────────┬─────────────────────────────────┬───────────────────────────┘
-          │                           │                                 │
-          ▼                           └─────────────────┬───────────────┘
-┌─────────────────────────────────┐                     │
-│   WORDPRESS SERVER              │                     ▼
-│   (Content Management Layer)    │   ┌─────────────────────────────────────────────────────────────┐
-│                                 │   │   LARAVEL APPLICATION CLUSTER                              │
-│   • Nginx + PHP-FPM 8.2         │   │   (Application & Transaction Layer)                        │
-│   • WordPress 6.x               │   │                                                             │
-│   • Custom Theme (EduFin)       │   │   • Nginx (Load Balancer)                                  │
-│   • Plugins:                    │   │   • PHP-FPM 8.3 Workers                                    │
-│     - EduFin SSO                │   │   • Livewire (Portal UI)                                   │
-│     - EduFin API Client         │   │   • REST API (Mobile/Integrations)                        │
+│         │ edufin.co.ke              │ app.edufin.co.ke                                          │
+└─────────┬───────────────────────────┬──────────────────────────────────────────────────────────┘
+          │                           │
+          ▼                           ▼
+┌─────────────────────────────────┐   ┌─────────────────────────────────────────────────────────────┐
+│   WORDPRESS SERVER              │   │   LARAVEL APPLICATION CLUSTER                              │
+│   (Content & API Path Routing)  │   │   (Application & Transaction Layer)                        │
+│                                 │   │                                                             │
+│   • Nginx + PHP-FPM 8.2         │   │   • Nginx (Load Balancer)                                  │
+│   • WordPress 6.x               │   │   • PHP-FPM 8.3 Workers                                    │
+│   • Custom Theme (EduFin)       │   │   • Livewire (Portal UI)                                   │
+│   • Plugins:                    │   │   • REST API (Mobile/Integrations)                        │
 │     - Yoast SEO                 │   │   • Filament (Admin Panel)                                │
 │     - WP Rocket                 │   │   • Horizon (Queue Processing)                            │
 │     - LiveChat                  │   │                                                             │
 │     - Mailchimp                 │   │   Business Services:                                       │
 │                                 │   │   • KYC Service                                            │
-│   Database: MySQL 8.0           │   │   • Loan Service                                           │
-│   (Content Only - No PII)       │   │   • Collateral Service                                     │
-│                                 │   │   • Payment Service                                        │
-└─────────────────────────────────┘   │   • Notification Service                                   │
-                                      │   • Audit Service                                           │
-          │                           │                                                             │
-          │   Shared Redis            │   Database: PostgreSQL 16                                  │
-          │   (SSO Sessions)          │   Cache: Redis                                             │
+│   • /api/ proxied to Laravel    │   │   • Loan Service                                           │
+│     via Nginx path routing      │   │   • Collateral Service                                     │
+│   Database: MySQL 8.0           │   │   • Payment Service                                        │
+│   (Content Only - No PII)       │   │   • Notification Service                                   │
+│                                 │   │   • Audit Service                                           │
+└─────────────────────────────────┘   │                                                             │
+          │                           │   Database: PostgreSQL 16                                  │
+          │   /api/ proxy             │   Cache: Redis                                             │
           └───────────────────────────┤                                                             │
                                       └─────────────────────────────────────────────────────────────┘
                                                         │
@@ -135,11 +133,9 @@ This document defines the technical architecture for the EduFin dual-platform ec
 
 | Domain | Platform | Purpose | Access |
 |--------|----------|---------|--------|
-| `edufin.co.ke` | WordPress | Public marketing website | Public |
+| `edufin.co.ke` | WordPress + Laravel (path routing) | Public marketing website AND REST API (`/api/v1/...` proxied to Laravel via Nginx) | Public (site) / Authenticated (API) |
 | `www.edufin.co.ke` | WordPress | Redirect to root domain | Public |
-| `app.edufin.co.ke` | Laravel/Livewire | Client portal (web) | Authenticated |
-| `api.edufin.co.ke` | Laravel | REST API (mobile, integrations) | Authenticated |
-| `admin.edufin.co.ke` | Laravel/Filament | Internal administration | Staff Only |
+| `app.edufin.co.ke` | Laravel/Livewire | Client portal (`/login`, `/register`, `/dashboard`) AND admin panel (`/admin`, Filament) | Authenticated |
 | `cdn.edufin.co.ke` | Cloudflare R2 | Static assets, media | Public |
 
 ---
@@ -204,8 +200,6 @@ RESTRICTED:
 
 | Plugin | Purpose | Configuration |
 |--------|---------|---------------|
-| **EduFin SSO** | Custom SSO integration with Laravel | API key, endpoints |
-| **EduFin API Client** | Fetch data from Laravel (packages, rates) | API key, caching |
 | **Yoast SEO** | SEO optimization | Auto-generate meta |
 | **WP Rocket** | Performance caching | Page cache, CDN |
 | **Tawk.to / LiveChat** | Live chat support | Business hours, routing |
@@ -281,7 +275,6 @@ laravel/
 │   │   ├── Controllers/
 │   │   │   ├── Api/V1/              # REST API controllers (versioned)
 │   │   │   ├── Portal/              # Livewire web controllers
-│   │   │   ├── Sso/                 # SSO controllers
 │   │   │   └── Webhooks/            # External webhook handlers
 │   │   ├── Livewire/                # Livewire components
 │   │   │   ├── Dashboard/
@@ -303,8 +296,7 @@ laravel/
 │   ├── api.php                      # REST API routes
 │   └── channels.php                 # WebSocket channels
 └── config/
-    ├── banking.php                  # Core banking config
-    └── sso.php                      # SSO configuration
+    └── banking.php                  # Core banking config
 ```
 
 ---
@@ -318,29 +310,7 @@ laravel/
 │                                    DATA FLOW PATTERNS                                                │
 ├─────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                     │
-│  FLOW 1: CONTENT BROWSING (WordPress → Laravel API → WordPress)                                    │
-│  ─────────────────────────────────────────────────────────────────                                 │
-│                                                                                                     │
-│  User visits Products page → WordPress calls Laravel API → JSON response → WordPress renders       │
-│                                                                                                     │
-│  ┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                      │
-│  │  User    │────►│  WordPress   │────►│  Laravel     │────►│  WordPress   │                      │
-│  │ (Browser)│     │  /products   │     │  /api/v1/    │     │  Renders     │                      │
-│  └──────────┘     │              │     │  packages    │     │  Content     │                      │
-│                   └──────────────┘     └──────────────┘     └──────────────┘                      │
-│                                                                                                     │
-│  FLOW 2: SSO AUTHENTICATION (WordPress → Laravel → WordPress)                                      │
-│  ────────────────────────────────────────────────────────────                                      │
-│                                                                                                     │
-│  User clicks Login → Redirect to Laravel → Auth → Token → Redirect back → WP session              │
-│                                                                                                     │
-│  ┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                      │
-│  │  User    │────►│  WordPress   │────►│  Laravel     │────►│  WordPress   │                      │
-│  │ (Login)  │     │  Redirect    │     │  /sso/login  │     │  Validate    │                      │
-│  └──────────┘     └──────────────┘     │  Auth+Token  │     │  Create Sess │                      │
-│                                        └──────────────┘     └──────────────┘                      │
-│                                                                                                     │
-│  FLOW 3: LOAN APPLICATION (Portal → Services → Database → Banking)                                 │
+│  FLOW 1: LOAN APPLICATION (Portal → Services → Database → Banking)                                 │
 │  ─────────────────────────────────────────────────────────────────                                 │
 │                                                                                                     │
 │  Client submits → Livewire validates → Service processes → DB persist → Queue job → Banking API   │
@@ -350,7 +320,7 @@ laravel/
 │  │ (Portal) │     │  Component   │     │  Service     │     │  + Queue Job │     │  Banking     ││
 │  └──────────┘     └──────────────┘     └──────────────┘     └──────────────┘     └──────────────┘│
 │                                                                                                     │
-│  FLOW 4: MOBILE APP (Flutter → REST API → Services → Database)                                     │
+│  FLOW 2: MOBILE APP (Flutter → REST API → Services → Database)                                     │
 │  ─────────────────────────────────────────────────────────────                                     │
 │                                                                                                     │
 │  App request → JWT auth → API controller → Service → Database → JSON response                      │
@@ -361,7 +331,7 @@ laravel/
 │  │  (JWT)   │     │              │     │              │     │              │                      │
 │  └──────────┘     └──────────────┘     └──────────────┘     └──────────────┘                      │
 │                                                                                                     │
-│  FLOW 5: WEBHOOK PROCESSING (External → Laravel → Database → Notifications)                        │
+│  FLOW 3: WEBHOOK PROCESSING (External → Laravel → Database → Notifications)                        │
 │  ──────────────────────────────────────────────────────────────────────────                        │
 │                                                                                                     │
 │  Banking webhook → Signature verify → Process → Update DB → Notify client                          │
@@ -379,9 +349,6 @@ laravel/
 
 | Flow | Source | Destination | Protocol | Data Type | Security |
 |------|--------|-------------|----------|-----------|----------|
-| Content Fetch | WordPress | Laravel API | HTTPS | JSON (packages, rates) | API Key |
-| SSO Auth | WordPress | Laravel | HTTPS | Token exchange | One-time token |
-| Session Validation | WordPress | Laravel API | HTTPS | Session ID | API Key + HMAC |
 | Loan Application | Portal (Livewire) | PostgreSQL | Internal | Form data | CSRF + Auth |
 | Banking Sync | Laravel | Core Banking | HTTPS + mTLS | JSON | Client cert + API key |
 | Payment Webhook | Core Banking | Laravel | HTTPS | JSON | Signature verification |
@@ -710,35 +677,8 @@ return [
 │                                    API ARCHITECTURE                                                  │
 ├─────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                                     │
-│  PUBLIC API (api.edufin.co.ke/api/v1)                                                              │
+│  PUBLIC API (edufin.co.ke/api/v1)                                                                   │
 │  ════════════════════════════════════                                                              │
-│                                                                                                     │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │  UNAUTHENTICATED ENDPOINTS (WordPress Integration)                                          │  │
-│  │  ──────────────────────────────────────────────────                                         │  │
-│  │                                                                                             │  │
-│  │  GET  /api/v1/packages              # List financing packages (cached)                     │  │
-│  │  GET  /api/v1/packages/{slug}       # Package details                                      │  │
-│  │  GET  /api/v1/calculator/rates      # Loan calculator rates                                │  │
-│  │  POST /api/v1/inquiries             # Submit contact inquiry                               │  │
-│  │  POST /api/v1/newsletter/subscribe  # Newsletter signup                                    │  │
-│  │                                                                                             │  │
-│  │  Security: API Key (X-API-Key header)                                                      │  │
-│  │  Rate Limit: 100 requests/minute                                                           │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
-│                                                                                                     │
-│  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
-│  │  SSO ENDPOINTS (WordPress ↔ Laravel)                                                        │  │
-│  │  ───────────────────────────────────                                                        │  │
-│  │                                                                                             │  │
-│  │  GET  /sso/login                    # Initiate SSO login                                   │  │
-│  │  POST /api/v1/sso/validate          # Validate one-time token                              │  │
-│  │  POST /api/v1/sso/session           # Validate persistent session                          │  │
-│  │  POST /sso/logout                   # Logout and invalidate sessions                       │  │
-│  │  GET  /api/v1/sso/me                # Get current user info                                │  │
-│  │                                                                                             │  │
-│  │  Security: API Key + One-time tokens + Session cookies                                     │  │
-│  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
 │  │  AUTHENTICATED ENDPOINTS (Mobile App / Portal)                                              │  │
@@ -1067,7 +1007,7 @@ return [
 │  │  │  │       Repositories          │  │       Data Sources          │                 │  │  │
 │  │  │  │                             │  │                             │                 │  │  │
 │  │  │  │  • AuthRepository           │  │  • ApiDataSource            │                 │  │  │
-│  │  │  │  • LoanRepository           │  │    (api.edufin.co.ke)       │                 │  │  │
+│  │  │  │  • LoanRepository           │  │    (edufin.co.ke/api/v1)   │                 │  │  │
 │  │  │  │  • BeneficiaryRepository    │  │                             │                 │  │  │
 │  │  │  │  • DocumentRepository       │  │  • LocalDataSource          │                 │  │  │
 │  │  │  │                             │  │    (SQLite/Hive)            │                 │  │  │
@@ -1081,7 +1021,7 @@ return [
 │                                           ▼                                                       │
 │  ┌─────────────────────────────────────────────────────────────────────────────────────────────┐  │
 │  │                                                                                             │  │
-│  │                              LARAVEL API (api.edufin.co.ke)                                │  │
+│  │                              LARAVEL API (edufin.co.ke/api/v1)                              │  │
 │  │                                                                                             │  │
 │  │  Same API endpoints used by web portal - no additional backend development required        │  │
 │  │                                                                                             │  │
@@ -1106,15 +1046,15 @@ return [
 │  │                                                                                             │  │
 │  │                    ┌───────────────────────────────────────┐                              │  │
 │  │                    │                                       │                              │  │
-│  │     ┌──────────────┼──────────────┬──────────────┬────────┼──────────────┐               │  │
-│  │     │              │              │              │        │              │               │  │
-│  │     ▼              ▼              ▼              ▼        ▼              ▼               │  │
-│  │  ┌──────┐     ┌──────┐     ┌──────┐     ┌──────┐    ┌──────┐     ┌──────┐              │  │
-│  │  │ Web  │     │ iOS  │     │Android│    │ Admin│    │ WP   │     │Future│              │  │
-│  │  │Portal│     │ App  │     │ App  │     │Panel │    │ Site │     │ Apps │              │  │
-│  │  │(Live │     │(Flutt│     │(Flutt│     │(Fila │    │(API  │     │      │              │  │
-│  │  │wire) │     │er)   │     │er)   │     │ment) │    │Client│     │      │              │  │
-│  │  └──────┘     └──────┘     └──────┘     └──────┘    └──────┘     └──────┘              │  │
+│  │     ┌──────────────┼──────────────┬──────────────┬────────┐                              │  │
+│  │     │              │              │              │        │                              │  │
+│  │     ▼              ▼              ▼              ▼        ▼                              │  │
+│  │  ┌──────┐     ┌──────┐     ┌──────┐     ┌──────┐    ┌──────┐                           │  │
+│  │  │ Web  │     │ iOS  │     │Android│    │ Admin│    │Future│                           │  │
+│  │  │Portal│     │ App  │     │ App  │     │Panel │    │ Apps │                           │  │
+│  │  │(Live │     │(Flutt│     │(Flutt│     │(Fila │    │      │                           │  │
+│  │  │wire) │     │er)   │     │er)   │     │ment) │    │      │                           │  │
+│  │  └──────┘     └──────┘     └──────┘     └──────┘    └──────┘                           │  │
 │  │                                                                                             │  │
 │  │  ALL CLIENTS USE THE SAME API ENDPOINTS                                                    │  │
 │  │  • Consistent business logic                                                               │  │
@@ -1301,19 +1241,7 @@ return [
 
 ## 11. Integration Points & Contracts
 
-### 11.1 WordPress ↔ Laravel Integration
-
-| Integration Point | Direction | Protocol | Authentication | Data Format |
-|-------------------|-----------|----------|----------------|-------------|
-| SSO Login | WP → Laravel | HTTPS | Redirect + Token | URL params |
-| SSO Validate | WP → Laravel | HTTPS POST | API Key | JSON |
-| SSO Session | WP → Laravel | HTTPS POST | API Key | JSON |
-| Get Packages | WP → Laravel | HTTPS GET | API Key | JSON |
-| Get Rates | WP → Laravel | HTTPS GET | API Key | JSON |
-| Submit Inquiry | WP → Laravel | HTTPS POST | API Key | JSON |
-| Newsletter Sync | WP → Laravel | HTTPS POST | API Key | JSON |
-
-### 11.2 Laravel ↔ Core Banking Integration
+### 11.1 Laravel ↔ Core Banking Integration
 
 | Integration Point | Direction | Protocol | Authentication | Data Format |
 |-------------------|-----------|----------|----------------|-------------|
@@ -1323,7 +1251,7 @@ return [
 | Payment Webhook | CBS → Laravel | HTTPS | Signature Verification | JSON |
 | Status Webhook | CBS → Laravel | HTTPS | Signature Verification | JSON |
 
-### 11.3 Laravel ↔ External Services
+### 11.2 Laravel ↔ External Services
 
 | Service | Purpose | Protocol | Authentication |
 |---------|---------|----------|----------------|
@@ -1406,7 +1334,6 @@ return [
 | **CBS** | Core Banking System |
 | **mTLS** | Mutual TLS (two-way certificate authentication) |
 | **RBAC** | Role-Based Access Control |
-| **SSO** | Single Sign-On |
 | **JWT** | JSON Web Token |
 | **PII** | Personally Identifiable Information |
 | **KYC** | Know Your Customer |

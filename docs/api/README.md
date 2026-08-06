@@ -2,7 +2,7 @@
 
 ## EduFin REST API
 
-**Base URL:** `https://api.edufin.co.ke/api/v1`
+**Base URL:** `https://edufin.co.ke/api/v1`
 
 ## Authentication
 

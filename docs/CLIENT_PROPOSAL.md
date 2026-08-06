@@ -62,11 +62,9 @@ We recommend **Cloudflare** as the centralized DNS and security management platf
 │  │                                                                         │  │
 │  │  DNS Records:                                                          │  │
 │  │  ─────────────                                                         │  │
-│  │  edufin.co.ke        A       → Server IP    (WordPress)               │  │
+│  │  edufin.co.ke        A       → Server IP    (WordPress + API routing)│  │
 │  │  www.edufin.co.ke    CNAME   → edufin.co.ke (Redirect)                │  │
-│  │  app.edufin.co.ke    A       → Server IP    (Laravel Portal)          │  │
-│  │  api.edufin.co.ke    A       → Server IP    (Laravel API)             │  │
-│  │  admin.edufin.co.ke  A       → Server IP    (Laravel Admin)           │  │
+│  │  app.edufin.co.ke    A       → Server IP    (Laravel Portal + Admin)  │  │
 │  │                                                                         │  │
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                 │
@@ -161,7 +159,6 @@ Cloudflare will be configured to point development subdomains to this server:
 |-----------|---------|
 | `dev.edufin.co.ke` | WordPress development site |
 | `dev-app.edufin.co.ke` | Laravel portal development |
-| `dev-api.edufin.co.ke` | API testing endpoint |
 
 ---
 
@@ -203,8 +200,7 @@ For production deployment, we recommend upgrading to a **Contabo VDS** (Virtual 
 │  HOSTED APPLICATIONS:                                                          │
 │  • WordPress (Landing Page)      → edufin.co.ke                               │
 │  • Laravel Application           → app.edufin.co.ke                           │
-│  • Laravel API                   → api.edufin.co.ke                           │
-│  • Laravel Admin                 → admin.edufin.co.ke                         │
+│  • Laravel API                   → edufin.co.ke/api/v1 (path routing)         │
 │  • MySQL Database (WordPress)                                                  │
 │  • PostgreSQL Database (Laravel)                                              │
 │  • Redis Cache & Sessions                                                      │
@@ -218,11 +214,9 @@ Cloudflare will serve as the primary DNS and security layer:
 
 | Domain | Application | Purpose |
 |--------|-------------|---------|
-| `edufin.co.ke` | WordPress | Public marketing website |
+| `edufin.co.ke` | WordPress + API | Public marketing website + API path routing |
 | `www.edufin.co.ke` | Redirect | Redirects to root domain |
-| `app.edufin.co.ke` | Laravel | Client self-service portal |
-| `api.edufin.co.ke` | Laravel | REST API for mobile app |
-| `admin.edufin.co.ke` | Laravel | Internal administration |
+| `app.edufin.co.ke` | Laravel | Client portal + admin panel (Filament) |
 
 ### 4.3 Development vs. Production Comparison
 
@@ -256,9 +250,8 @@ Both the WordPress website and Laravel application will be hosted on a **single 
 │  │                                                                         │  │
 │  │  Routes requests based on domain:                                      │  │
 │  │  • edufin.co.ke        → WordPress (PHP-FPM 8.2)                       │  │
+│  │    • /api/             → Laravel (PHP-FPM 8.3) [path routing]          │  │
 │  │  • app.edufin.co.ke    → Laravel (PHP-FPM 8.3)                         │  │
-│  │  • api.edufin.co.ke    → Laravel (PHP-FPM 8.3)                         │  │
-│  │  • admin.edufin.co.ke  → Laravel (PHP-FPM 8.3)                         │  │
 │  │                                                                         │  │
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 │                                   │                                            │
@@ -352,8 +345,6 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │  │     • Legal pages (Terms & Conditions, Privacy Policy)                 │  │
 │  │     • SEO optimization (Yoast SEO configuration)                       │  │
 │  │     • Performance optimization (caching, image optimization)           │  │
-│  │     • SSO integration with Laravel portal                              │  │
-│  │     • API integration for dynamic content (packages, rates)            │  │
 │  │     • Live chat widget integration                                     │  │
 │  │     • Newsletter signup integration                                    │  │
 │  │     • Mobile-responsive design                                         │  │
@@ -473,7 +464,6 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │  □ Custom theme development                                                    │
 │  □ Page templates and content structure                                        │
 │  □ Plugin configuration                                                        │
-│  □ SSO and API integration                                                     │
 │  □ Client review and feedback                                                  │
 │                                                                                 │
 │  PHASE 3: LARAVEL CORE (Weeks 5-8)                                             │

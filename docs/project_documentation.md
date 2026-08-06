@@ -132,10 +132,8 @@ EduFin addresses these challenges through:
 
 | Domain | Platform | Purpose | Audience |
 |--------|----------|---------|----------|
-| `edufin.co.ke` | WordPress | Company landing page, marketing | Public |
-| `app.edufin.co.ke` | Laravel | Client & staff portal | Authenticated users |
-| `api.edufin.co.ke` | Laravel | REST API for mobile & integrations | Applications |
-| `admin.edufin.co.ke` | Laravel/Filament | Internal administration | Staff only |
+| `edufin.co.ke` | WordPress + API | Company landing page, marketing, API path routing | Public |
+| `app.edufin.co.ke` | Laravel | Client portal + admin panel (Filament) | Authenticated users |
 
 ### 3.2 Technology Stack
 
@@ -181,7 +179,7 @@ EduFin addresses these challenges through:
 - Standalone component, decoupled from core application
 - Managed internally by company secretarial staff
 - No access to business data or client information
-- Communicates with Laravel only for SSO and public data (rates, packages)
+- Links to Laravel portal for login and registration (standard HTML links)
 
 **Content Managed:**
 - Company profile and about information
@@ -240,11 +238,11 @@ EduFin addresses these challenges through:
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
 │  │                     API LAYER                                            │  │
 │  │                                                                          │  │
-│  │  REST API (api.edufin.co.ke)       Consumers                            │  │
+│  │  REST API (edufin.co.ke/api/v1)   Consumers                            │  │
 │  │  ├── Authentication (JWT)          ├── Flutter Mobile App (iOS/Android) │  │
-│  │  ├── Client Endpoints              ├── WordPress (SSO, Public Data)     │  │
-│  │  ├── Loan Endpoints                ├── Future Partner Integrations      │  │
-│  │  ├── Document Endpoints            └── Internal Microservices           │  │
+│  │  ├── Client Endpoints              ├── Future Partner Integrations      │  │
+│  │  ├── Loan Endpoints                └── Internal Microservices           │  │
+│  │  ├── Document Endpoints                                                 │  │
 │  │  ├── Notification Endpoints                                             │  │
 │  │  └── Webhook Receivers                                                  │  │
 │  │                                                                          │  │
@@ -484,10 +482,10 @@ For loan facilities, EduFin implements a comprehensive legal role framework:
 
 ### 7.2 Data Flow Principles
 
-1. **WordPress → Laravel (Read Only)**
-   - Public data: Financing packages, interest rates
-   - SSO authentication tokens
-   - No write access to Laravel data
+1. **WordPress → Laravel (Links Only)**
+   - WordPress links to `app.edufin.co.ke/login` and `app.edufin.co.ke/register`
+   - No API consumption, no SSO, no shared data
+   - The two systems are fully independent
 
 2. **Laravel → Core Banking (Bidirectional)**
    - Outbound: Loan creation, disbursement requests
@@ -549,7 +547,7 @@ For loan facilities, EduFin implements a comprehensive legal role framework:
 │         ▼                             ▼                             ▼         │
 │  ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐ │
 │  │   WORDPRESS     │         │  CORE BANKING   │         │   MOBILE APP    │ │
-│  │   (SSO, Data)   │         │    SYSTEM       │         │   (Flutter)     │ │
+│  │   (Independent) │         │    SYSTEM       │         │   (Flutter)     │ │
 │  └─────────────────┘         └─────────────────┘         └─────────────────┘ │
 │                                       │                                        │
 │         ┌─────────────────────────────┼─────────────────────────────┐         │
@@ -575,7 +573,7 @@ For loan facilities, EduFin implements a comprehensive legal role framework:
 
 | Integration | Direction | Protocol | Purpose |
 |-------------|-----------|----------|---------|
-| WordPress | Bidirectional | HTTPS + API Key | SSO, public data |
+| WordPress | None (independent) | Standard HTML links | Links to login/register |
 | Core Banking | Bidirectional | HTTPS + mTLS | Loan operations |
 | M-Pesa | Inbound (webhook) | HTTPS | Payment processing |
 | Africa's Talking | Outbound | HTTPS | SMS notifications |

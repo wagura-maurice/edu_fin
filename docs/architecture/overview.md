@@ -19,18 +19,17 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 │                              CLOUDFLARE                                         │
 │                    (DNS, CDN, WAF, SSL Termination)                            │
 │                                   │                                             │
-│              ┌────────────────────┼────────────────────┐                       │
-│              │                    │                    │                        │
-│              ▼                    ▼                    ▼                        │
-│     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐             │
-│     │ edufin.co.ke    │  │app.edufin.co.ke │  │api.edufin.co.ke │             │
-│     │   WORDPRESS     │  │    LARAVEL      │  │    LARAVEL      │             │
-│     │  Landing Page   │  │  Client Portal  │  │    REST API     │             │
-│     └────────┬────────┘  └────────┬────────┘  └────────┬────────┘             │
-│              │                    │                    │                        │
-│              │                    └──────────┬─────────┘                        │
-│              │                               │                                  │
-│              ▼                               ▼                                  │
+│              ┌────────────────────┴────────────────────┐                       │
+│              │                                          │                        │
+│              ▼                                          ▼                        │
+│     ┌─────────────────┐                    ┌─────────────────┐                 │
+│     │ edufin.co.ke    │                    │app.edufin.co.ke │                 │
+│     │   WORDPRESS     │   /api/v1 (proxy)  │    LARAVEL      │                 │
+│     │  Landing Page   │───────────────────►│  Client Portal  │                 │
+│     │                 │                    │  Admin (Filament)│                 │
+│     └────────┬────────┘                    └────────┬────────┘                 │
+│              │                                      │                          │
+│              ▼                                      ▼                          │
 │     ┌─────────────────┐         ┌─────────────────────────────────┐           │
 │     │     MySQL       │         │         PostgreSQL              │           │
 │     │  (Content Only) │         │    (All Business Data)          │           │
@@ -55,21 +54,26 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 
 ### Laravel (Core Application)
 - **Purpose:** All business operations
+- **Domain:** `app.edufin.co.ke` (portal + admin) and `edufin.co.ke/api/v1` (REST API via Nginx path routing on the main domain)
 - **Components:**
-  - Client Portal (Livewire)
-  - Admin Panel (Filament)
-  - REST API (Sanctum)
+  - Client Portal (Livewire) — `app.edufin.co.ke/dashboard`
+  - Admin Panel (Filament) — `app.edufin.co.ke/admin`
+  - REST API (Sanctum) — `edufin.co.ke/api/v1`
   - Queue Workers (Horizon)
+- **Authentication:** Login at `app.edufin.co.ke/login`; onboarding at `app.edufin.co.ke/register`. After login, users are redirected by role:
+  - Client → `app.edufin.co.ke/dashboard`
+  - Staff (Loan Officer, KYC Verifier, System Admin, Super Admin) → `app.edufin.co.ke/admin`
 - **Contains:** Users, loans, KYC, documents, transactions
 
 ## Integration Points
 
 | Integration | Protocol | Purpose |
 |-------------|----------|---------|
-| WordPress → Laravel | HTTPS + API Key | SSO, public data |
 | Laravel → CBS | HTTPS + mTLS | Financial operations |
-| Mobile → Laravel | HTTPS + JWT | Client access |
-| CBS → Laravel | HTTPS + Webhook | Payment notifications |
+| Mobile → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + JWT | Client access |
+| CBS → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + Webhook | Payment notifications |
+
+> **Note:** There is no integration between WordPress and Laravel. Each system operates independently. The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain.
 
 ## Key Principles
 

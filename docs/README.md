@@ -32,7 +32,7 @@ docs/
 │
 ├── security/                           # Security documentation
 │   ├── README.md                       # Security overview
-│   ├── authentication.md               # Auth & SSO
+│   ├── authentication.md               # Auth & Role-Based Access Control
 │   ├── authorization.md                # RBAC & permissions
 │   └── data-protection.md              # Encryption & compliance
 │

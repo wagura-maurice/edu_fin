@@ -108,7 +108,8 @@ The review evaluates compatibility, scalability, and security best practices aga
 │     ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐         │
 │     │ edufin.co.ke    │   │app.edufin.co.ke │   │cdn.edufin.co.ke │         │
 │     │   WORDPRESS     │   │    LARAVEL      │   │  CLOUDFLARE R2  │         │
-│     │  Landing Page   │   │  Portal + API   │   │  Object Storage │         │
+│     │  Landing Page   │   │  Portal + Admin │   │  Object Storage │         │
+│     │  + /api/v1      │   │                 │   │                 │         │
 │     └────────┬────────┘   └────────┬────────┘   └─────────────────┘         │
 │              │                      │                      │                  │
 │              ▼                      ▼                      │                  │
@@ -168,7 +169,7 @@ The review evaluates compatibility, scalability, and security best practices aga
 | Portal access | Browser | Laravel (via Nginx) | HTTPS | Client portal |
 | File/image serving | Browser/App | Cloudflare R2 | HTTPS | CDN-delivered assets |
 | File upload | Laravel | Cloudflare R2 | HTTPS (S3 API) | Store documents |
-| WordPress → Laravel | WordPress | Laravel API | HTTPS + API Key | SSO, public data |
+| WordPress → Laravel | WordPress | Laravel | Standard HTML links | Links to login/register |
 | Laravel → CBS | Laravel | Core Banking | HTTPS + mTLS | Financial operations |
 | Mobile App → API | Flutter | Laravel API | HTTPS + JWT | Client functionality |
 
@@ -487,13 +488,13 @@ server {
 
 server {
     listen 80;
-    server_name app.edufin.co.ke api.edufin.co.ke admin.edufin.co.ke;
+    server_name app.edufin.co.ke;
     return 301 https://$server_name$request_uri;
 }
 
 server {
     listen 443 ssl http2;
-    server_name app.edufin.co.ke api.edufin.co.ke admin.edufin.co.ke;
+    server_name app.edufin.co.ke;
 
     # SSL certificates (Let's Encrypt)
     ssl_certificate /etc/letsencrypt/live/edufin.co.ke/fullchain.pem;
@@ -503,12 +504,8 @@ server {
     root /var/www/laravel/public;
     index index.php index.html;
 
-    # Rate limiting (different zones for different subdomains)
-    set $rate_zone "laravel";
-    if ($host = "api.edufin.co.ke") {
-        set $rate_zone "api";
-    }
-    limit_req zone=$rate_zone burst=30 nodelay;
+    # Rate limiting
+    limit_req zone=laravel burst=30 nodelay;
 
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN" always;
@@ -571,7 +568,7 @@ certbot --nginx -d edufin.co.ke -d www.edufin.co.ke \
     --non-interactive --agree-tos --email admin@edufin.co.ke \
     --redirect
 
-certbot --nginx -d app.edufin.co.ke -d api.edufin.co.ke -d admin.edufin.co.ke \
+certbot --nginx -d app.edufin.co.ke \
     --non-interactive --agree-tos --email admin@edufin.co.ke \
     --redirect
 
@@ -992,19 +989,20 @@ location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
 │  │                 │                    │  • Audit Logs                   │    │
 │  └────────┬────────┘                    └────────┬────────────────────────┘    │
 │           │                                       │                            │
-│           │       API Communication               │                            │
-│           │       (HTTPS + API Key)               │                            │
+│           │       No API Communication           │                            │
+│           │       (Independent Systems)           │                            │
 │           │                                       │                            │
 │           └───────────────┬───────────────────────┘                            │
 │                           │                                                    │
 │                           ▼                                                    │
 │                   ┌──────────────────┐                                        │
-│                   │  INTEGRATION     │                                        │
-│                   │  POINTS          │                                        │
+│                   │  NO INTEGRATION  │                                        │
+│                   │  (Independent    │                                        │
+│                   │   Systems)       │                                        │
 │                   │                  │                                        │
-│                   │  1. SSO Auth     │                                        │
-│                   │  2. Public Data  │                                        │
-│                   │  3. Inquiries    │                                        │
+│                   │  WordPress links │                                        │
+│                   │  to app.edufin   │                                        │
+│                   │  .co.ke/login    │                                        │
 │                   └──────────────────┘                                        │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -1012,20 +1010,12 @@ location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
 
 ### 7.3 Integration Points
 
-#### 1. SSO Authentication
-WordPress redirects login to Laravel. Laravel authenticates and issues a one-time token. WordPress validates the token via API and creates a local session.
+The two systems (WordPress and Laravel) are **independent**. There is no SSO or API integration between them. WordPress links to the Laravel application via standard HTML links:
 
-**Data consistency:** User identity lives in Laravel. WordPress stores only a session reference (no PII).
+- **Login:** `app.edufin.co.ke/login`
+- **Register:** `app.edufin.co.ke/register`
 
-#### 2. Public Data (Packages, Rates)
-WordPress fetches financing packages and rates from Laravel's public API. WordPress caches the response (1 hour TTL) to minimize API calls.
-
-**Data consistency:** Laravel is the source of truth. WordPress displays cached data. If Laravel is unavailable, WordPress serves stale cached data.
-
-#### 3. Contact Form Inquiries
-WordPress contact forms submit to Laravel API. Laravel stores the inquiry and triggers notifications.
-
-**Data consistency:** Inquiries are stored ONLY in Laravel. WordPress does not retain submission data.
+WordPress does NOT consume Laravel APIs. All authentication and business logic reside entirely within Laravel.
 
 ### 7.4 File Upload Best Practices
 
@@ -1512,8 +1502,8 @@ PHASE 9: CLOUDFLARE DNS
 PHASE 10: FINAL VERIFICATION
 ────────────────────────────
 52. Test WordPress site (https://edufin.co.ke)
-53. Test Laravel portal (https://app.edufin.co.ke)
-54. Test API (https://api.edufin.co.ke/api/v1/packages)
+53. Test Laravel portal (https://app.edufin.co.ke) and admin panel (https://app.edufin.co.ke/admin)
+54. Test API (https://edufin.co.ke/api/v1/packages)
 55. Test R2 CDN (https://cdn.edufin.co.ke/test-file.txt)
 56. Test SSL Labs grade (A+ expected)
 57. Verify backups are configured
