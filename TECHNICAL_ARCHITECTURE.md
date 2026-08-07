@@ -124,7 +124,7 @@ This document defines the technical architecture for the EduFin dual-platform ec
                                       │                  EXTERNAL INTEGRATIONS                      │
                                       │                                                             │
                                       │   • Core Banking API        • Payment Gateways (M-Pesa)    │
-                                      │   • Document Verification   • SMS (Africa's Talking)       │
+                                      │   • Document Verification   • WhatsApp (WAHA)             │
                                       │   • Email (SendGrid)        • Storage (Cloudflare R2)      │
                                       └─────────────────────────────────────────────────────────────┘
 ```
@@ -163,7 +163,8 @@ WordPress serves as the **public-facing brand presence** and **content managemen
 - Email Marketing (Newsletter signup, Mailchimp integration)
 
 **Customer Support:**
-- Live Chat Integration (Tawk.to / LiveChat)
+- Support Chat Widget (bottom-right, powered by Support Agent via AI Agents system)
+- WhatsApp Support (via WAHA server)
 - Help Resources (Guides, video tutorials, downloadable forms)
 
 **Legal & Compliance:**
@@ -202,7 +203,7 @@ RESTRICTED:
 |--------|---------|---------------|
 | **Yoast SEO** | SEO optimization | Auto-generate meta |
 | **WP Rocket** | Performance caching | Page cache, CDN |
-| **Tawk.to / LiveChat** | Live chat support | Business hours, routing |
+| **Support Chat Widget** | AI-powered live chat (Support Agent) | Bottom-right widget, WhatsApp + email support |
 | **Mailchimp for WP** | Newsletter integration | List sync, forms |
 | **WPForms** | Contact forms | Spam protection, notifications |
 | **Wordfence** | Security hardening | Firewall, malware scan |
@@ -249,7 +250,7 @@ Laravel/Livewire serves as the **secure application portal** handling all sensit
 
 **Communication:**
 - Email Notifications
-- SMS Alerts
+- WhatsApp Alerts (via WAHA)
 - In-App Notifications
 - Push Notifications (Mobile)
 
@@ -338,7 +339,7 @@ laravel/
 │                                                                                                     │
 │  ┌──────────┐     ┌──────────────┐     ┌──────────────┐     ┌──────────────┐                      │
 │  │  Core    │────►│  Laravel     │────►│  PostgreSQL  │────►│  Client      │                      │
-│  │  Banking │     │  /webhook/   │     │  Update      │     │  Email/SMS   │                      │
+│  │  Banking │     │  /webhook/   │     │  Update      │     │ Email/WhatsApp│                      │
 │  │  (Event) │     │  payment     │     │  Records     │     │              │                      │
 │  └──────────┘     └──────────────┘     └──────────────┘     └──────────────┘                      │
 │                                                                                                     │
@@ -354,7 +355,7 @@ laravel/
 | Payment Webhook | Core Banking | Laravel | HTTPS | JSON | Signature verification |
 | Mobile API | Flutter App | Laravel API | HTTPS | JSON | JWT Bearer token |
 | Document Upload | Portal | Cloudflare R2 | HTTPS | Binary | Signed URL |
-| Notifications | Laravel | Email/SMS | HTTPS | JSON | API Key |
+| Notifications | Laravel | Email/WhatsApp | HTTPS | JSON | API Key |
 
 ---
 
@@ -737,7 +738,7 @@ return [
 │  │  POST /api/v1/webhooks/banking/payment    # Payment notification from CBS                  │  │
 │  │  POST /api/v1/webhooks/banking/status     # Loan status update from CBS                    │  │
 │  │  POST /api/v1/webhooks/mpesa/callback     # M-Pesa payment callback                        │  │
-│  │  POST /api/v1/webhooks/sms/delivery       # SMS delivery report                            │  │
+│  │  POST /api/v1/webhooks/whatsapp/delivery  # WhatsApp delivery report                       │  │
 │  │                                                                                             │  │
 │  │  Security: Signature verification + IP whitelist                                           │  │
 │  └─────────────────────────────────────────────────────────────────────────────────────────────┘  │
@@ -1255,7 +1256,7 @@ return [
 
 | Service | Purpose | Protocol | Authentication |
 |---------|---------|----------|----------------|
-| Africa's Talking | SMS Notifications | HTTPS | API Key |
+| WAHA | WhatsApp Notifications | HTTPS | API Key |
 | SendGrid | Email Notifications | HTTPS | API Key |
 | M-Pesa | Payment Processing | HTTPS | OAuth + API Key |
 | NTSA | Vehicle Verification | HTTPS | API Key |

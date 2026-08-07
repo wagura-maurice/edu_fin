@@ -22,6 +22,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  • Public-facing brand presence                                                │
 │  • Marketing content management                                                │
 │  • SEO optimization                                                            │
+│  • Customer support chat widget (bottom-right corner)                          │
 │  • Links to Laravel portal for login & registration                            │
 │                                                                                 │
 │  MANAGED BY:                                                                   │
@@ -54,6 +55,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 | Testimonials | Client reviews | Monthly |
 | Legal Documents | Terms, Privacy Policy | Annually |
 | Contact Info | Addresses, phones | As needed |
+| Support Chat Widget | Bottom-right chat widget (powered by Support Agent) | Always active |
 
 ## Technology Stack
 
@@ -80,8 +82,35 @@ WordPress does not use custom plugins for Laravel integration. Login and registr
 | WP Rocket | Performance caching | Yes |
 | Wordfence | Security | Yes |
 | UpdraftPlus | Backups | Yes |
-| Tawk.to | Live chat | Optional |
 | Mailchimp | Newsletter | Optional |
+
+## Support Chat Widget
+
+The WordPress site includes a **support chat widget** embedded in the bottom-right corner of every page. This widget is powered by the **Support Agent** (part of the EduFin AI Agents system) and provides real-time customer support to website visitors.
+
+### Widget Behavior
+
+| Feature | Description |
+|---------|-------------|
+| **Location** | Bottom-right corner of all WordPress pages |
+| **Visibility** | Always visible; shows online/offline status |
+| **Authentication** | Anonymous (no login required); collects name/email/phone for follow-up |
+| **Real-time chat** | When Support Agent is online, visitors chat in real-time via WebSocket |
+| **Offline mode** | When agent is offline, displays a contact form to collect visitor info for follow-up |
+| **Rate limiting** | Max 10 messages per minute per visitor (abuse prevention) |
+| **Escalation** | Complex queries are escalated to human support staff; visitor is notified |
+
+### Technical Integration
+
+| Aspect | Specification |
+|--------|---------------|
+| **Embedding** | JavaScript snippet loaded on all WordPress pages (via theme `functions.php` or header plugin) |
+| **Communication** | WebSocket connection to Support Agent backend |
+| **Agent** | Support Agent (MCP Server) — see [Support Agent Architecture](../ai-agents/support-agent.md) |
+| **Channels** | Chat widget, WhatsApp (via WAHA), Email (customer_care@edufin.co.ke, support@edufin.co.ke) |
+| **Data stored** | Conversation transcripts, visitor contact info (if provided) — NO PII from Laravel |
+
+> **Note:** The support chat widget does NOT access Laravel business data (loans, clients, KYC). It can answer FAQs about EduFin products and direct visitors to the Laravel portal for account-specific actions. The widget is managed by the AI Agents layer and does not require a WordPress plugin — it is a lightweight JavaScript embed that connects directly to the Support Agent backend.
 
 ## Security Configuration
 
@@ -113,3 +142,5 @@ $table_prefix = 'edf_';                // Non-default prefix
 - [Content Management Guide](./content-management.md)
 - [Theme Structure](./theme-structure.md)
 - [Plugin Documentation](./plugins.md)
+- [AI Agents Architecture](../ai-agents/README.md)
+- [Support Agent](../ai-agents/support-agent.md)

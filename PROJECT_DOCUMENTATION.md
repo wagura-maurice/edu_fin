@@ -362,7 +362,7 @@ When multiple obligors are assigned to a single loan facility:
 | API Layer | `edufin.co.ke/api/v1` (Laravel, path-based) | RESTful services for mobile app, webhooks, integrations |
 | KYC Engine | Laravel application | Identity verification, document validation |
 | Document Storage | Cloudflare R2 (`cdn.edufin.co.ke`) | Secure storage for legal documents, collateral proofs |
-| Notification Service | Laravel application | Email and SMS alert management |
+| Notification Service | Laravel application | Email and WhatsApp alert management |
 | Core Banking System | External | Financial operations, disbursements, payment processing |
 
 > **Routing Notes:**
@@ -500,7 +500,7 @@ When multiple obligors are assigned to a single loan facility:
 | File Storage | AWS S3 / Cloudflare R2 |
 | Authentication | JWT + OAuth 2.0 |
 | Email Service | SendGrid / AWS SES |
-| SMS Gateway | Africa's Talking / Twilio |
+| WhatsApp Gateway | WAHA (WhatsApp HTTP API) |
 
 ### 7.2 Non-Functional Requirements
 
@@ -874,7 +874,7 @@ Each financing package includes:
 | Channel | Priority | Use Cases |
 |---------|----------|-----------|
 | Email | Primary | All notifications, statements, documents |
-| SMS | Secondary | Payment reminders, urgent alerts |
+| WhatsApp | Secondary | Payment reminders, urgent alerts |
 | In-App | Tertiary | Real-time updates, status changes |
 
 ### 12.2 Notification Types
@@ -883,13 +883,13 @@ Each financing package includes:
 |--------------|---------|---------|
 | Application Received | Email | On submission |
 | Document Verification Status | Email | On status change |
-| Loan Approval | Email + SMS | On approval |
-| Payment Reminder | Email + SMS | 7, 3, 1 days before deadline |
+| Loan Approval | Email + WhatsApp | On approval |
+| Payment Reminder | Email + WhatsApp | 7, 3, 1 days before deadline |
 | Payment Confirmation | Email | On payment receipt |
 | Statement Available | Email | Monthly |
-| Overdue Notice | Email + SMS | On deadline breach |
+| Overdue Notice | Email + WhatsApp | On deadline breach |
 | Account Updates | Email | On profile changes |
-| Liability Transition Notice | Email + SMS | On beneficiary turning 18 |
+| Liability Transition Notice | Email + WhatsApp | On beneficiary turning 18 |
 | Co-Obligor Addition | Email | On obligor assignment |
 | Portal Access Granted | Email | On beneficiary access provisioning |
 
@@ -983,7 +983,7 @@ All notifications must include:
 | BE-10 | Obligor Assignment APIs | BE-09 | 3 days |
 | BE-11 | Statement generation service | BE-09 | 3 days |
 | BE-12 | Notification service (Email) | BE-03 | 3 days |
-| BE-13 | Notification service (SMS) | BE-12 | 2 days |
+| BE-13 | Notification service (WhatsApp) | BE-12 | 2 days |
 | BE-14 | Liability transition service | BE-10 | 4 days |
 | BE-15 | Admin APIs | BE-03 | 4 days |
 | BE-16 | Core banking integration layer | BE-09 | 5 days |

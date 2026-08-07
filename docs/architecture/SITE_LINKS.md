@@ -186,7 +186,7 @@ After a successful login at `app.edufin.co.ke/login`, the system redirects users
 | POST | `https://edufin.co.ke/api/v1/webhooks/banking/payment` | Payment notification from CBS |
 | POST | `https://edufin.co.ke/api/v1/webhooks/banking/status` | Loan status update from CBS |
 | POST | `https://edufin.co.ke/api/v1/webhooks/mpesa/callback` | M-Pesa payment callback |
-| POST | `https://edufin.co.ke/api/v1/webhooks/sms/delivery` | SMS delivery report |
+| POST | `https://edufin.co.ke/api/v1/webhooks/whatsapp/delivery` | WhatsApp delivery report |
 
 #### Health Check
 

@@ -242,7 +242,7 @@ laravel/app/
     │   └── LoanApplicationService.php
     └── Notification/
         ├── EmailService.php
-        └── SmsService.php
+        └── WhatsappService.php
 ```
 
 ### 3.3 Key Services

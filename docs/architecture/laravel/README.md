@@ -125,7 +125,7 @@ Laravel serves as the **central engine** of the EduFin platform, powering all bu
 - `ProcessLoanApplication` - Async loan processing
 - `SyncLoanWithCoreBanking` - CBS synchronization
 - `ProcessPaymentWebhook` - Payment processing
-- `SendNotification` - Email/SMS dispatch
+- `SendNotification` - Email/WhatsApp dispatch
 - `GenerateStatement` - PDF generation
 - `ReconcilePayments` - Daily reconciliation
 
@@ -148,7 +148,7 @@ app/Services/
 │
 ├── Notification/
 │   ├── EmailService.php            # Email dispatch
-│   ├── SmsService.php              # SMS dispatch
+│   ├── WhatsappService.php         # WhatsApp dispatch (via WAHA)
 │   └── PushNotificationService.php # Push notifications
 │
 └── Document/
@@ -187,7 +187,7 @@ app/Services/
 |---------|---------|----------|
 | Core Banking | Financial operations | HTTPS + mTLS |
 | M-Pesa | Payments | HTTPS + OAuth |
-| Africa's Talking | SMS | HTTPS |
+| WAHA | WhatsApp | HTTPS |
 | SendGrid | Email | HTTPS |
 | Cloudflare R2 | Document storage | HTTPS |
 | NTSA | Vehicle verification | HTTPS |

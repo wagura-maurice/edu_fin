@@ -60,7 +60,7 @@ The EduFin AI Agents system uses the **Model Context Protocol (MCP)** — an ope
 │  ══════════                                                             │
 │  • Exposes tools, resources, and prompts via the protocol               │
 │  • EduFin Implementation: Each sub-agent (Marketing, Email,            │
-│    Self-Healing)                                                        │
+│    Support, Self-Healing)                                               │
 │  • Responds to tool calls and resource requests                         │
 │  • Can also act as MCP Client to external MCP Servers                   │
 │                                                                         │
@@ -92,44 +92,54 @@ The EduFin AI Agents system uses the **Model Context Protocol (MCP)** — an ope
 │                     ┌────┘   │   └────┐                                       │
 │                     │        │        │                                       │
 │              ┌──────┴──┐ ┌──┴──────┐ ┌┴────────────┐                          │
-│              │ MCP     │ │ MCP     │ │ MCP          │                          │
-│              │ Client  │ │ Client  │ │ Client       │                          │
-│              │ #1      │ │ #2      │ │ #3           │                          │
-│              └──┬──────┘ └──┬──────┘ └──┬───────────┘                          │
-│                 │           │           │                                      │
-│          stdio/SSE    stdio/SSE    stdio/SSE                                   │
-│                 │           │           │                                      │
-│          ┌──────┴──┐ ┌─────┴─────┐ ┌──┴───────────┐                           │
-│          │ MCP     │ │ MCP       │ │ MCP          │                           │
-│          │ Server  │ │ Server    │ │ Server       │                           │
-│          │ (Mktg)  │ │ (Email)   │ │ (Self-Heal)  │                           │
-│          └────┬────┘ └─────┬─────┘ └──┬───────────┘                           │
-│               │            │          │                                       │
-│               ▼            ▼          ▼                                       │
-│          External      External    External                                   │
-│          Services      Services    Services                                   │
-│          (X, WP)       (SMTP)      (Git, SSH)                                 │
+│              │ MCP     │ │ MCP     │ │ MCP     │ │ MCP          │                 │
+│              │ Client  │ │ Client  │ │ Client  │ │ Client       │                 │
+│              │ #1      │ │ #2      │ │ #3      │ │ #4           │                 │
+│              └──┬──────┘ └──┬──────┘ └──┬──────┘ └──┬───────────┘                 │
+│                 │           │           │          │                              │
+│          stdio/SSE    stdio/SSE    stdio/SSE   stdio/SSE                          │
+│                 │           │           │          │                              │
+│          ┌──────┴──┐ ┌─────┴─────┐ ┌───┴──────┐ ┌──┴───────────┐                │
+│          │ MCP     │ │ MCP       │ │ MCP      │ │ MCP          │                │
+│          │ Server  │ │ Server    │ │ Server   │ │ Server       │                │
+│          │ (Mktg)  │ │ (Email)   │ │ (Support)│ │ (Self-Heal)  │                │
+│          └────┬────┘ └─────┬─────┘ └───┬──────┘ └──┬───────────┘                │
+│               │            │           │          │                              │
+│               ▼            ▼           ▼          ▼                              │
+│          External      External    External   External                           │
+│          Services      Services    Services   Services                           │
+│          (Social,      (SMTP,      (Chat,     (Git, SSH)                         │
+│           WP, WAHA)    IMAP)       WAHA,                                         │
+│                                     SMTP)                                        │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### 2.2 Sub-Agent as MCP Client (Chained Connections)
 
-Sub-agents may also act as MCP Clients to connect to external MCP Servers (e.g., a WordPress MCP Server, an X/Twitter MCP Server, an SMTP MCP Server):
+Sub-agents may also act as MCP Clients to connect to external MCP Servers (e.g., a WordPress MCP Server, social media MCP Servers, an SMTP MCP Server, a WAHA MCP Server):
 
 ```
 Master Agent (MCP Host)
   │
   ├── MCP Client #1 ──► Marketing Agent (MCP Server)
   │                         │
-  │                         ├── MCP Client ──► X/Twitter MCP Server
-  │                         └── MCP Client ──► WordPress REST MCP Server
+  │                         ├── MCP Client ──► Social Media MCP Servers (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube)
+  │                         ├── MCP Client ──► WordPress REST MCP Server
+  │                         ├── MCP Client ──► SMTP MCP Server (marketing@edufin.co.ke)
+  │                         └── MCP Client ──► WAHA MCP Server (WhatsApp broadcasts)
   │
   ├── MCP Client #2 ──► Email Agent (MCP Server)
   │                         │
-  │                         └── MCP Client ──► SMTP MCP Server (info@, support@)
+  │                         └── MCP Client ──► SMTP/IMAP MCP Server (all mailboxes)
   │
-  └── MCP Client #3 ──► Self-Healing Agent (MCP Server)
+  ├── MCP Client #3 ──► Support Agent (MCP Server)
+  │                         │
+  │                         ├── MCP Client ──► WordPress Chat Widget (WebSocket)
+  │                         ├── MCP Client ──► WAHA MCP Server (WhatsApp support)
+  │                         └── MCP Client ──► SMTP/IMAP MCP Server (support@, customer_care@)
+  │
+  └── MCP Client #4 ──► Self-Healing Agent (MCP Server)
                             │
                             ├── MCP Client ──► Git MCP Server
                             └── MCP Client ──► Server Health MCP Server
@@ -366,10 +376,13 @@ Prompt templates are pre-defined task definitions that the Master Agent can retr
 
 | Prompt ID | Sub-Agent | Purpose |
 |-----------|-----------|---------|
-| `marketing_trend_report` | Marketing Agent | Generate a weekly trend analysis report |
-| `marketing_create_promotion` | Marketing Agent | Create a promotional tweet based on product data |
+| `marketing_trend_report` | Marketing Agent | Generate a weekly trend analysis report across all social media platforms |
+| `marketing_create_promotion` | Marketing Agent | Create promotional content for a product across social media platforms |
+| `marketing_seo_audit` | Marketing Agent | Generate an SEO optimization audit for WordPress content |
 | `email_draft_response` | Email Agent | Draft a response to an email inquiry |
 | `email_follow_up` | Email Agent | Generate a follow-up message for an existing thread |
+| `support_faq_response` | Support Agent | Generate an FAQ response for chat/WhatsApp/email |
+| `support_escalation_summary` | Support Agent | Generate a summary for staff handoff |
 | `selfheal_diagnose` | Self-Healing Agent | Run full diagnostic on a target system |
 | `selfheal_patch` | Self-Healing Agent | Generate a patch for a detected issue |
 
@@ -445,10 +458,12 @@ Agent credentials (API keys, SMTP passwords, OAuth tokens) are stored in the sam
 
 | Secret | Storage | Access |
 |--------|---------|--------|
-| X/Twitter API credentials | Environment variables / Vault | Marketing Agent only |
-| SMTP credentials (info@, support@) | Environment variables / Vault | Email Agent only |
+| Social media API credentials (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube) | Environment variables / Vault | Marketing Agent only |
+| SMTP credentials (all mailboxes) | Environment variables / Vault | Email Agent (all), Marketing Agent (marketing@), Support Agent (support@, customer_care@) |
+| WAHA API key | Environment variables / Vault | Marketing Agent (broadcasts), Support Agent (support) |
+| WordPress Application Password | Environment variables / Vault | Marketing Agent (content/SEO), Support Agent (chat widget) |
+| WordPress Chat Widget API key + WebSocket token | Environment variables / Vault | Support Agent only |
 | Git deploy keys | SSH key store | Self-Healing Agent only |
-| WordPress Application Password | Environment variables / Vault | Marketing Agent only |
 | Laravel API key | Environment variables / Vault | All agents (read-only endpoints) |
 
 > **Security Rule:** No agent may access another agent's credentials. The Master Agent does not handle raw credentials — it only routes tool calls.
@@ -475,4 +490,8 @@ Every MCP message is logged for audit purposes:
 **See Also:**
 - [AI Agents Overview](./README.md)
 - [Master Agent Architecture](./master-agent.md)
+- [Marketing Agent](./marketing-agent.md)
+- [Email Agent](./email-agent.md)
+- [Support Agent](./support-agent.md)
+- [Self-Healing Agent](./self-healing-agent.md)
 - [Technical Integration & Workflow](./integration.md)

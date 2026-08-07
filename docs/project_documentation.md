@@ -253,7 +253,7 @@ EduFin addresses these challenges through:
 │  │                                                                          │  │
 │  │  Core Banking Interface            External Services                    │  │
 │  │  ├── Loan Account Creation         ├── M-Pesa (Payments)                │  │
-│  │  ├── Disbursement Requests         ├── Africa's Talking (SMS)           │  │
+│  │  ├── Disbursement Requests         ├── WAHA (WhatsApp)                  │  │
 │  │  ├── Payment Processing            ├── SendGrid (Email)                 │  │
 │  │  ├── Balance Inquiries             ├── NTSA (Vehicle Verification)      │  │
 │  │  ├── Statement Retrieval           └── Land Registry (Title Search)     │  │
@@ -554,8 +554,8 @@ For loan facilities, EduFin implements a comprehensive legal role framework:
 │         │                             │                             │         │
 │         ▼                             ▼                             ▼         │
 │  ┌─────────────────┐         ┌─────────────────┐         ┌─────────────────┐ │
-│  │    M-PESA       │         │  AFRICA'S       │         │   SENDGRID      │ │
-│  │   (Payments)    │         │  TALKING (SMS)  │         │   (Email)       │ │
+│  │    M-PESA       │         │   WAHA          │         │   SENDGRID      │ │
+│  │   (Payments)    │         │  (WhatsApp)     │         │   (Email)       │ │
 │  └─────────────────┘         └─────────────────┘         └─────────────────┘ │
 │                                                                                 │
 │         ┌─────────────────────────────┬─────────────────────────────┐         │
@@ -576,7 +576,7 @@ For loan facilities, EduFin implements a comprehensive legal role framework:
 | WordPress | None (independent) | Standard HTML links | Links to login/register |
 | Core Banking | Bidirectional | HTTPS + mTLS | Loan operations |
 | M-Pesa | Inbound (webhook) | HTTPS | Payment processing |
-| Africa's Talking | Outbound | HTTPS | SMS notifications |
+| WAHA | Outbound | HTTPS | WhatsApp notifications |
 | SendGrid | Outbound | HTTPS | Email notifications |
 | NTSA | Outbound | HTTPS | Vehicle verification |
 | Cloudflare R2 | Bidirectional | HTTPS | Document storage |

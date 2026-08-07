@@ -35,25 +35,25 @@ The AI Agents module integrates with the existing EduFin platform through well-d
 │                         ┌─────────────────┐                                       │
 │                         │  MASTER AGENT   │                                       │
 │                         │  (Orchestrator) │                                       │
-│                         └──┬───┬───┬──────┘                                       │
-│                            │   │   │                                               │
-│               ┌────────────┘   │   └────────────┐                                │
-│               │                │                │                                 │
-│               ▼                ▼                ▼                                 │
-│      ┌────────────┐   ┌────────────┐   ┌──────────────┐                          │
-│      │ MARKETING  │   │   EMAIL    │   │ SELF-HEALING │                          │
-│      │   AGENT    │   │   AGENT    │   │    AGENT     │                          │
-│      └──┬───┬────┘   └─────┬──────┘   └──┬───┬───────┘                          │
-│         │   │              │              │   │                                   │
-│         │   │              │              │   │                                   │
-│    ┌────┘   └────┐    ┌────┘         ┌───┘   └────┐                             │
-│    │             │    │              │            │                              │
-│    ▼             ▼    ▼              ▼            ▼                              │
-│  ┌─────┐    ┌────────┐ ┌──────┐  ┌───────┐  ┌──────────┐                       │
-│  │ X   │    │ WP     │ │ SMTP │  │ Git   │  │ SSH      │                       │
-│  │ API │    │ REST   │ │ IMAP │  │ Repo  │  │ Servers  │                       │
-│  │ v2  │    │ API    │ │      │  │       │  │ (WP+LV)  │                       │
-│  └─────┘    └───┬────┘ └──────┘  └───────┘  └────┬─────┘                       │
+│                         └──┬───┬──┬───┬──────┘                                    │
+│                            │   │  │   │                                            │
+│               ┌────────────┘   │  │   └────────────┐                             │
+│               │                │  │                │                              │
+│               ▼                ▼  ▼                ▼                              │
+│      ┌────────────┐   ┌────────────┐   ┌──────────┐  ┌──────────────┐            │
+│      │ MARKETING  │   │   EMAIL    │   │ SUPPORT  │  │ SELF-HEALING │            │
+│      │   AGENT    │   │   AGENT    │   │  AGENT   │  │    AGENT     │            │
+│      └──┬───┬────┘   └─────┬──────┘   └──┬───┬───┘  └──┬───┬───────┘            │
+│         │   │              │              │   │       │   │                      │
+│         │   │              │              │   │       │   │                      │
+│    ┌────┘   └────┐    ┌────┘         ┌────┘   └───┐   │   └────┐                │
+│    │             │    │              │            │   │        │                 │
+│    ▼             ▼    ▼              ▼            ▼   ▼        ▼                 │
+│  ┌──────┐    ┌──────┐ ┌──────┐  ┌──────┐  ┌──────┐ ┌──────┐ ┌──────────┐       │
+│  │Social│    │ WP   │ │ SMTP │  │ WP   │  │ WAHA │ │ SMTP │ │ Git Repo│       │
+│  │Media │    │ REST │ │ IMAP │  │ Chat │  │ WA   │ │ IMAP │ │ SSH     │       │
+│  │ APIs │    │ API  │ │      │  │Widget│  │      │ │      │ │ Servers │       │
+│  └──────┘    └──┬───┘ └──────┘  └──────┘  └──────┘ └──────┘ └─────┬────┘       │
 │                 │                                  │                              │
 │                 │          ┌──────────────┐       │                              │
 │                 └─────────►│   LARAVEL    │◄──────┘                              │
@@ -94,9 +94,14 @@ The AI Agents module integrates with the existing EduFin platform through well-d
 | Communication Path | Protocol | Transport | Format |
 |---------------------|----------|-----------|--------|
 | Master Agent ↔ Sub-Agent | MCP (JSON-RPC 2.0) | stdio / SSE | JSON |
-| Marketing Agent ↔ X/Twitter | X API v2 | HTTPS | JSON |
+| Marketing Agent ↔ Social Media APIs | X/Twitter, Facebook Graph, Instagram Graph, TikTok Business, LinkedIn Marketing, YouTube Data APIs | HTTPS | JSON |
 | Marketing Agent ↔ WordPress | WordPress REST API | HTTPS | JSON |
-| Email Agent ↔ SMTP | SMTP / IMAP | TLS / SSL | RFC 5321/3501 |
+| Marketing Agent ↔ SMTP (marketing@) | SMTP / IMAP | TLS / SSL | RFC 5321/3501 |
+| Marketing Agent ↔ WAHA | WAHA REST API | HTTPS | JSON |
+| Email Agent ↔ SMTP/IMAP | SMTP / IMAP | TLS / SSL | RFC 5321/3501 |
+| Support Agent ↔ WordPress Chat Widget | WebSocket | WSS | JSON |
+| Support Agent ↔ WAHA (WhatsApp) | WAHA REST API | HTTPS | JSON |
+| Support Agent ↔ SMTP/IMAP | SMTP / IMAP | TLS / SSL | RFC 5321/3501 |
 | Self-Healing Agent ↔ Git | Git over SSH | SSH | Git protocol |
 | Self-Healing Agent ↔ Servers | SSH | SSH (key auth) | Shell commands |
 | All Agents ↔ Laravel API | REST API | HTTPS | JSON |
@@ -136,10 +141,15 @@ Sub-agents communicate with external services using their native protocols. The 
 
 | Sub-Agent | External Service | Protocol | Connection Owner |
 |-----------|-----------------|----------|-----------------|
-| Marketing | X/Twitter API | HTTPS REST | Marketing Agent (direct) |
+| Marketing | Social Media APIs (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube) | HTTPS REST | Marketing Agent (direct) |
 | Marketing | WordPress REST | HTTPS REST | Marketing Agent (direct) |
-| Email | SMTP server | SMTP/TLS | Email Agent (direct) |
-| Email | IMAP server | IMAP/SSL | Email Agent (direct) |
+| Marketing | SMTP (marketing@edufin.co.ke) | SMTP/TLS | Marketing Agent (direct) |
+| Marketing | WAHA (WhatsApp) | HTTPS REST | Marketing Agent (direct) |
+| Email | SMTP server (all mailboxes) | SMTP/TLS | Email Agent (direct) |
+| Email | IMAP server (all mailboxes) | IMAP/SSL | Email Agent (direct) |
+| Support | WordPress Chat Widget | WebSocket (WSS) | Support Agent (direct) |
+| Support | WAHA (WhatsApp) | HTTPS REST | Support Agent (direct) |
+| Support | SMTP/IMAP (support@, customer_care@) | SMTP/TLS, IMAP/SSL | Support Agent (direct) |
 | Self-Healing | Git repository | SSH | Self-Healing Agent (direct) |
 | Self-Healing | WordPress server | SSH | Self-Healing Agent (direct) |
 | Self-Healing | Laravel server | SSH | Self-Healing Agent (direct) |
@@ -316,9 +326,10 @@ SELF-HEALING REPAIR DATA FLOW
 
 | Method | Used By | Purpose | Auth |
 |--------|---------|---------|------|
-| WordPress REST API | Marketing Agent | Create blog drafts, list posts, upload media | Application Password |
+| WordPress REST API | Marketing Agent | Create blog drafts, list posts, upload media, SEO suggestions | Application Password |
+| WordPress Chat Widget (WebSocket) | Support Agent | Real-time chat with website visitors | API Key + WebSocket token |
 | SSH access | Self-Healing Agent | Log access, service restarts, health checks | SSH key |
-| Webhook (outbound) | WordPress → Master Agent | Notify on new inquiry, newsletter signup | HMAC signature |
+| Webhook (outbound) | WordPress → Master Agent | Notify on new inquiry, newsletter signup, chat escalation | HMAC signature |
 
 ### 4.2 WordPress REST API Endpoints Used
 
@@ -339,6 +350,8 @@ WordPress sends webhooks to the Master Agent for event-driven tasks:
 | New contact form submission | `POST /agents/webhooks/wp/inquiry` | Email Agent: Send acknowledgment + draft response |
 | New newsletter subscriber | `POST /agents/webhooks/wp/subscriber` | Email Agent: Send welcome email |
 | New comment on blog post | `POST /agents/webhooks/wp/comment` | Marketing Agent: Analyze sentiment; escalate if negative |
+| Chat widget escalation | `POST /agents/webhooks/wp/chat/escalate` | Support Agent: Escalate chat to human staff; notify via Slack |
+| Chat widget offline message | `POST /agents/webhooks/wp/chat/offline` | Support Agent: Collect contact info; create follow-up task |
 
 ### 4.4 WordPress SSH Access (Self-Healing Agent)
 
@@ -361,7 +374,7 @@ WordPress sends webhooks to the Master Agent for event-driven tasks:
 
 | Method | Used By | Purpose | Auth |
 |--------|---------|---------|------|
-| REST API (read-only) | Marketing Agent, Email Agent | Fetch product info, subscriber lists, notification triggers | API Key (`X-API-Key`) |
+| REST API (read-only) | Marketing Agent, Email Agent, Support Agent | Fetch product info, subscriber lists, FAQ content, notification triggers | API Key (`X-API-Key`) |
 | REST API (webhook receiver) | Master Agent | Receive webhooks from Laravel events | HMAC signature |
 | SSH access | Self-Healing Agent | Log access, service restarts, health checks, artisan commands | SSH key |
 | PostgreSQL (indirect) | Master Agent | Audit log storage (via Laravel API endpoint) | API Key |
@@ -370,9 +383,10 @@ WordPress sends webhooks to the Master Agent for event-driven tasks:
 
 | Endpoint | Method | Agent | Purpose |
 |----------|--------|-------|---------|
-| `GET /api/v1/packages` | GET | Marketing | Fetch financing packages for content generation |
-| `GET /api/v1/packages/{slug}` | GET | Marketing | Fetch specific package details |
+| `GET /api/v1/packages` | GET | Marketing, Support | Fetch financing packages for content generation / FAQ answers |
+| `GET /api/v1/packages/{slug}` | GET | Marketing, Support | Fetch specific package details |
 | `GET /api/v1/calculator/rates` | GET | Marketing | Fetch current rates for content accuracy |
+| `GET /api/v1/faqs` | GET | Support | Fetch FAQ content for chat widget / WhatsApp / email responses |
 | `GET /api/v1/health` | GET | Self-Healing | Check Laravel application health |
 | `POST /api/v1/agents/audit` | POST | Master Agent | Submit agent action audit log |
 | `POST /api/v1/agents/hitl` | POST | Master Agent | Submit HITL request record |
@@ -435,18 +449,27 @@ Agent actions are persisted to the Laravel PostgreSQL database for long-term aud
 
 ## 6. External Service Integration
 
-### 6.1 X/Twitter API Integration
+### 6.1 Social Media API Integrations
+
+The Marketing Agent integrates with multiple social media platforms used in Kenya:
+
+| Platform | API | Account | Auth Method | Used By |
+|----------|-----|---------|-------------|---------|
+| X/Twitter | X API v2 | `@EduFinKe` | OAuth 2.0 (User Context) + Bearer Token | Marketing Agent |
+| Facebook | Facebook Graph API | EduFin Kenya page | Page Access Token | Marketing Agent |
+| Instagram | Instagram Graph API | `edufin.ke` | Instagram Basic Display API + Graph API token | Marketing Agent |
+| TikTok | TikTok Business API | `edufin.ke` | OAuth 2.0 | Marketing Agent |
+| LinkedIn | LinkedIn Marketing API | EduFin company page | OAuth 2.0 | Marketing Agent |
+| YouTube | YouTube Data API v3 | EduFin channel | OAuth 2.0 | Marketing Agent |
+
+**Common Integration Aspects:**
 
 | Aspect | Specification |
 |--------|---------------|
-| API Version | v2 |
-| Base URL | `https://api.twitter.com/2/` |
-| Auth (read) | Bearer Token (App-only) |
-| Auth (write) | OAuth 2.0 (User Context) |
-| Account | `@EduFinKe` |
-| Rate Limit Handling | Respect `x-rate-limit-limit` and `x-rate-limit-reset` headers |
+| Rate Limit Handling | Respect platform-specific rate limit headers |
 | Retry Strategy | Exponential backoff on 429 (rate limit) and 5xx errors |
-| Webhook | X/Twitter Account Activity API for mention/reply notifications |
+| Webhook | Platform-specific webhooks for mention/reply/comment notifications |
+| Content Format | Platform-appropriate (text, images, video, carousel) |
 
 ### 6.2 SMTP/IMAP Integration
 
@@ -455,11 +478,38 @@ Agent actions are persisted to the Laravel PostgreSQL database for long-term aud
 | SMTP Host | `mail.edufin.co.ke:587` (STARTTLS) |
 | IMAP Host | `mail.edufin.co.ke:993` (SSL) |
 | Auth | SMTP Auth / IMAP Auth (per mailbox) |
-| Mailboxes | `info@edufin.co.ke`, `support@edufin.co.ke` |
+| Mailboxes | `info@`, `support@`, `marketing@`, `customer_care@`, `communications@edufin.co.ke` |
 | Polling | IMAP IDLE or 2-minute polling interval |
 | Sending Limits | 100/hour, 500/day per mailbox |
+| Used By | Email Agent (all mailboxes), Marketing Agent (marketing@), Support Agent (support@, customer_care@) |
 
-### 6.3 Git Integration
+### 6.3 WAHA (WhatsApp) Integration
+
+| Aspect | Specification |
+|--------|---------------|
+| WAHA Server URL | `http://waha.edufin.co.ke` (internal) |
+| API Version | WAHA REST API |
+| Auth | API Key (header: `X-API-Key`) |
+| WhatsApp Business Number | Configured in WAHA server |
+| Send Message | `POST /api/sendText` (text), `POST /api/sendImage` (image) |
+| Receive Message | WAHA webhook → `POST /agents/webhooks/whatsapp/inbound` |
+| Delivery Report | WAHA webhook → `POST /agents/webhooks/whatsapp/delivery` |
+| Session Management | WAHA maintains WhatsApp session; agent monitors connection status |
+| Used By | Marketing Agent (broadcasts to opted-in subscribers), Support Agent (customer support conversations) |
+| Rate Limit | Max 50 messages/hour (configurable); respect WhatsApp anti-spam policies |
+
+### 6.4 WordPress Chat Widget Integration
+
+| Aspect | Specification |
+|--------|---------------|
+| Widget Location | Bottom-right corner of all WordPress pages |
+| Communication | WebSocket (WSS) connection to Support Agent backend |
+| Auth | API Key + per-session WebSocket token |
+| Rate Limit | Max 10 messages/minute per visitor |
+| Used By | Support Agent |
+| Offline Behavior | Displays contact form; collects visitor info for follow-up |
+
+### 6.5 Git Integration
 
 | Aspect | Specification |
 |--------|---------------|
@@ -470,7 +520,7 @@ Agent actions are persisted to the Laravel PostgreSQL database for long-term aud
 | PR Creation | Via `gh` CLI (GitHub) or GitLab API |
 | Merge | Never autonomous — PRs require human review + HITL approval |
 
-### 6.4 Cloudflare Integration
+### 6.6 Cloudflare Integration
 
 | Aspect | Specification |
 |--------|---------------|
@@ -552,8 +602,8 @@ ERROR HANDLING FLOW
 | Self-Healing can't fix issue | Level 2 | Slack (urgent) + Email | 4 hours |
 | Security error detected | Level 2 | Slack (urgent) + Email | 2 hours |
 | Agent confidence < 0.70 | Level 2 | Slack + Dashboard | 4 hours |
-| Critical service down | Level 3 | Slack (@here) + SMS + Phone | 30 minutes |
-| Multiple services failing | Level 3 | Slack (@here) + SMS + Phone | 30 minutes |
+| Critical service down | Level 3 | Slack (@here) + WhatsApp + Phone | 30 minutes |
+| Multiple services failing | Level 3 | Slack (@here) + WhatsApp + Phone | 30 minutes |
 | HITL approval timeout (24h) | Level 2 | Slack (urgent) + Email | 4 hours |
 
 ### 7.4 Sub-Agent Failure Recovery
@@ -578,32 +628,41 @@ When a sub-agent becomes unresponsive or fails repeatedly, the Master Agent foll
 
 ### 8.1 Agent Permission Matrix
 
-| Capability | Master Agent | Marketing Agent | Email Agent | Self-Healing Agent |
-|------------|:------------:|:---------------:|:-----------:|:------------------:|
-| Route tasks to sub-agents | Yes | - | - | - |
-| Enforce HITL | Yes | - | - | - |
-| Post to X/Twitter | - | Yes | - | - |
-| Create WordPress drafts | - | Yes | - | - |
-| Send emails (SMTP) | - | - | Yes | - |
-| Read emails (IMAP) | - | - | Yes | - |
-| SSH to servers | - | - | - | Yes |
-| Git operations | - | - | - | Yes |
-| Read Laravel API (public) | - | Yes | Yes | Yes |
-| Write Laravel audit API | Yes | - | - | - |
-| Access PII/financial data | No | No | No | No |
-| Modify database schema | No | No | No | No |
-| Modify security config | No | No | No | No |
+| Capability | Master Agent | Marketing Agent | Email Agent | Support Agent | Self-Healing Agent |
+|------------|:------------:|:---------------:|:-----------:|:-------------:|:------------------:|
+| Route tasks to sub-agents | Yes | - | - | - | - |
+| Enforce HITL | Yes | - | - | - | - |
+| Post to social media (all platforms) | - | Yes | - | - | - |
+| Create WordPress drafts | - | Yes | - | - | - |
+| Suggest WordPress SEO optimizations | - | Yes | - | - | - |
+| Send marketing emails (marketing@) | - | Yes | - | - | - |
+| Send WhatsApp broadcasts (WAHA) | - | Yes | - | - | - |
+| Send emails (SMTP, all mailboxes) | - | - | Yes | - | - |
+| Read emails (IMAP, all mailboxes) | - | - | Yes | - | - |
+| Power WordPress chat widget | - | - | - | Yes | - |
+| Send WhatsApp support messages (WAHA) | - | - | - | Yes | - |
+| Send support emails (support@, customer_care@) | - | - | - | Yes | - |
+| Escalate conversations to staff | - | - | - | Yes | - |
+| SSH to servers | - | - | - | - | Yes |
+| Git operations | - | - | - | - | Yes |
+| Read Laravel API (public) | - | Yes | Yes | Yes | Yes |
+| Write Laravel audit API | Yes | - | - | - | - |
+| Access PII/financial data | No | No | No | No | No |
+| Modify database schema | No | No | No | No | No |
+| Modify security config | No | No | No | No | No |
 
 ### 8.2 Data Access Restrictions
 
 | Data Type | Access | Rationale |
 |-----------|--------|-----------|
-| WordPress content (public) | Read (Marketing Agent) | For content reference and blog creation |
+| WordPress content (public) | Read (Marketing Agent, Support Agent) | For content reference, blog creation, SEO suggestions, FAQ answers |
 | WordPress user data | No access | PII; not needed for agent functions |
-| Laravel public API data (packages, rates) | Read (all agents) | For content accuracy and health checks |
+| Laravel public API data (packages, rates, FAQs) | Read (all agents) | For content accuracy, FAQ responses, and health checks |
 | Laravel user/client data | No access | PII; agents do not need client data |
 | Laravel financial data (loans, payments) | No access | Financial data; agents do not need transaction data |
-| Email content (inbound/outbound) | Read/write (Email Agent only) | Required for email management |
+| Email content (inbound/outbound) | Read/write (Email Agent, Support Agent for support mailboxes, Marketing Agent for marketing@) | Required for email management and support |
+| Chat widget conversations | Read/write (Support Agent only) | Required for real-time chat support |
+| WhatsApp conversations | Read/write (Support Agent for support, Marketing Agent for broadcasts) | Required for WhatsApp support and marketing |
 | Server logs | Read (Self-Healing Agent) | Required for diagnostics |
 | Git source code | Read + branch write (Self-Healing Agent) | Required for patch generation |
 | Agent audit logs | Write (Master Agent) | For compliance and traceability |
@@ -614,8 +673,10 @@ When a sub-agent becomes unresponsive or fails repeatedly, the Master Agent foll
 |----------|-----------|
 | Agent ↔ Internet | Cloudflare WAF, rate limiting (inherited from existing platform) |
 | Agent ↔ WordPress server | HTTPS (REST API), SSH (key auth, restricted user) |
+| Agent ↔ WordPress chat widget | WSS (WebSocket Secure) with per-session token |
 | Agent ↔ Laravel server | HTTPS (REST API), SSH (key auth, restricted user) |
 | Agent ↔ SMTP/IMAP | TLS/SSL encryption |
+| Agent ↔ WAHA (WhatsApp) | HTTPS with API key (internal network) |
 | Master ↔ Sub-agents (local) | stdio (no network exposure) |
 | Master ↔ Sub-agents (remote) | TLS 1.2+ over SSE |
 | Agent ↔ Redis | TCP with AUTH password |
@@ -678,6 +739,7 @@ The HITL dashboard provides management with real-time visibility into agent acti
 - [Master Agent Architecture](./master-agent.md)
 - [Marketing Agent](./marketing-agent.md)
 - [Email Agent](./email-agent.md)
+- [Support Agent](./support-agent.md)
 - [Self-Healing Agent](./self-healing-agent.md)
 - [Architecture Overview](../overview.md)
 - [Security Documentation](../../security/README.md)

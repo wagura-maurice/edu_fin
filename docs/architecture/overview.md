@@ -49,7 +49,7 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 ### WordPress (Landing Page)
 - **Purpose:** Public-facing brand presence
 - **Managed by:** Secretarial staff
-- **Contains:** Marketing content, blog, FAQs
+- **Contains:** Marketing content, blog, FAQs, support chat widget (bottom-right)
 - **Does NOT contain:** Business data, PII, financial information
 
 ### Laravel (Core Application)
@@ -72,9 +72,9 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 | Laravel → CBS | HTTPS + mTLS | Financial operations |
 | Mobile → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + JWT | Client access |
 | CBS → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + Webhook | Payment notifications |
-| AI Agents → WordPress | HTTPS REST + SSH | Content management, health monitoring |
+| AI Agents → WordPress | HTTPS REST + SSH + WebSocket | Content management, SEO suggestions, support chat widget, health monitoring |
 | AI Agents → Laravel | HTTPS REST + SSH | Product data, audit logging, health monitoring |
-| AI Agents → External | HTTPS + SMTP/IMAP + SSH | X/Twitter, email, Git, server access |
+| AI Agents → External | HTTPS + SMTP/IMAP + SSH | Social media (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube), email, WhatsApp (WAHA), Git, server access |
 
 > **Note:** There is no direct integration between WordPress and Laravel. Each system operates independently. The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain.
 >

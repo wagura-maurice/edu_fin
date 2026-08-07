@@ -438,7 +438,7 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 | **Core Banking System** | Client to provide or procure separately |
 | **Domain Registration** | Client responsibility |
 | **Cloudflare Account** | Client responsibility |
-| **Third-party API Costs** | SMS, Email services (pay-as-you-go) |
+| **Third-party API Costs** | WhatsApp (WAHA), Email services (pay-as-you-go) |
 | **Content Creation** | Text, images, videos for website |
 
 ---

@@ -81,11 +81,11 @@ The Master Agent is the **central orchestrator** of the EduFin AI Agents system.
 │  ┌─────────────────────────────▼─────────────────────────────────────────┐   │
 │  │                    MCP CONNECTION MANAGER                              │   │
 │  │                                                                         │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐                            │   │
-│  │  │ MCP      │  │ MCP      │  │ MCP      │                            │   │
-│  │  │ Client   │  │ Client   │  │ Client   │                            │   │
-│  │  │ #1 (Mktg)│  │ #2(Email)│  │ #3(Heal) │                            │   │
-│  │  └──────────┘  └──────────┘  └──────────┘                            │   │
+│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐             │   │
+│  │  │ MCP      │  │ MCP      │  │ MCP      │  │ MCP      │             │   │
+│  │  │ Client   │  │ Client   │  │ Client   │  │ Client   │             │   │
+│  │  │ #1 (Mktg)│  │ #2(Email)│  │ #3(Supp) │  │ #4(Heal) │             │   │
+│  │  └──────────┘  └──────────┘  └──────────┘  └──────────┘             │   │
 │  └─────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
@@ -130,6 +130,7 @@ TASK ROUTING DECISION FLOW
    │
    ├── marketing ──────► Route to Marketing Agent
    ├── email ──────────► Route to Email Agent
+   ├── support ────────► Route to Support Agent
    ├── infrastructure ─► Route to Self-Healing Agent
    ├── cross-domain ───► Decompose into sub-tasks (Step 3)
    └── unknown ────────► Flag for HITL review
@@ -139,7 +140,8 @@ TASK ROUTING DECISION FLOW
    │
    ├── Sub-task A ──► Marketing Agent
    ├── Sub-task B ──► Email Agent
-   └── Sub-task C ──► Self-Healing Agent
+   ├── Sub-task C ──► Support Agent
+   └── Sub-task D ──► Self-Healing Agent
    │
    ▼
 4. CHECK AGENT AVAILABILITY
@@ -492,7 +494,7 @@ Level 3: CRITICAL ESCALATION
   │  cannot resolve a critical infrastructure issue)
   │  Immediate management notification required
   │  Timeout: 30 minutes
-  │  Channel: Slack (@here) + Phone/SMS + Dashboard
+  │  Channel: Slack (@here) + Phone/WhatsApp + Dashboard
   │  Action: All non-critical agent tasks paused
 ```
 
@@ -600,4 +602,5 @@ The Master Agent implements a circuit breaker per sub-agent to prevent cascading
 - [Technical Integration & Workflow](./integration.md)
 - [Marketing Agent](./marketing-agent.md)
 - [Email Agent](./email-agent.md)
+- [Support Agent](./support-agent.md)
 - [Self-Healing Agent](./self-healing-agent.md)

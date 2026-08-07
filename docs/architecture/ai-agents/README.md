@@ -21,8 +21,9 @@ This layer is **non-invasive**: it interacts with WordPress and Laravel through 
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  PURPOSE:                                                                       │
-│  • Autonomous marketing & content distribution                                 │
+│  • Autonomous marketing & content distribution (social media, email, WhatsApp) │
 │  • Automated email communication & thread management                           │
+│  • Customer support via chat widget, WhatsApp, and email                       │
 │  • Self-healing infrastructure monitoring & code repair                        │
 │  • Human-in-the-loop escalation for complex scenarios                          │
 │                                                                                 │
@@ -33,9 +34,12 @@ This layer is **non-invasive**: it interacts with WordPress and Laravel through 
 │  • Master Agent is an MCP Client/Host that routes and supervises              │
 │                                                                                 │
 │  INTERACTS WITH:                                                                │
-│  • WordPress (REST API, wp-admin) — content, marketing                         │
+│  • WordPress (REST API, wp-admin, chat widget) — content, marketing, support  │
 │  • Laravel (REST API at edufin.co.ke/api/v1) — business data, notifications   │
-│  • External services (X/Twitter, SMTP, Git, deployment)                       │
+│  • Social media (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube)   │
+│  • Email (SMTP/IMAP) — all EduFin mailboxes                                    │
+│  • WhatsApp (WAHA server) — marketing broadcasts & customer support            │
+│  • Git, deployment servers (self-healing)                                      │
 │                                                                                 │
 │  DOES NOT:                                                                      │
 │  ✗ Modify Laravel business logic or financial transaction flows               │
@@ -67,28 +71,42 @@ This layer is **non-invasive**: it interacts with WordPress and Laravel through 
 │                         │   (MCP Host)        │   Result Aggregation               │
 │                         │                     │   HITL Detection                   │
 │                         │                     │   Escalation Management            │
-│                         └──┬──────┬──────┬───┘                                    │
-│                            │      │      │                                        │
-│             MCP Protocol   │      │      │   MCP Protocol                         │
-│             (JSON-RPC)     │      │      │   (JSON-RPC)                           │
-│                            ▼      ▼      ▼                                        │
-│               ┌─────────┐ ┌─────────┐ ┌─────────────┐                            │
-│               │         │ │         │ │             │                            │
-│               │ MARKET- │ │ EMAIL   │ │ SELF-       │                            │
-│               │ ING     │ │ AGENT   │ │ HEALING     │                            │
-│               │ AGENT   │ │         │ │ AGENT       │                            │
-│               │ (MCP    │ │ (MCP    │ │ (MCP        │                            │
-│               │  Server)│ │  Server)│ │  Server)    │                            │
-│               └────┬────┘ └────┬────┘ └──────┬──────┘                            │
-│                    │           │             │                                   │
-│         ┌──────────┘     ┌─────┘             └──────────┐                       │
-│         ▼                ▼                              ▼                       │
-│  ┌─────────────┐  ┌─────────────┐              ┌─────────────────┐              │
-│  │ X/Twitter   │  │ SMTP        │              │ Git Repository  │              │
-│  │ API         │  │ info@       │              │ WordPress Code  │              │
-│  │ WordPress   │  │ support@    │              │ Laravel Code    │              │
-│  │ REST API    │  │ edufin.co.ke│              │ Server Health   │              │
-│  └─────────────┘  └─────────────┘              └─────────────────┘              │
+│                         └──┬───┬──┬───┬──────┘                                    │
+│                            │   │  │   │                                            │
+│             MCP Protocol   │   │  │   │   MCP Protocol                             │
+│             (JSON-RPC)     │   │  │   │   (JSON-RPC)                               │
+│                            ▼   ▼  ▼   ▼                                            │
+│          ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────────┐                      │
+│          │         │ │         │ │         │ │             │                      │
+│          │ MARKET- │ │ EMAIL   │ │ SUPPORT │ │ SELF-       │                      │
+│          │ ING     │ │ AGENT   │ │ AGENT   │ │ HEALING     │                      │
+│          │ AGENT   │ │         │ │         │ │ AGENT       │                      │
+│          │ (MCP    │ │ (MCP    │ │ (MCP    │ │ (MCP        │                      │
+│          │  Server)│ │  Server)│ │  Server)│ │  Server)    │                      │
+│          └──┬───┬──┘ └────┬────┘ └──┬───┬──┘ └──────┬──────┘                      │
+│             │   │         │         │   │           │                              │
+│    ┌────────┘   │    ┌────┘    ┌────┘   └────┐      └──────────┐                  │
+│    ▼            ▼    ▼         ▼             ▼                 ▼                  │
+│  ┌──────┐  ┌──────┐ ┌──────┐ ┌──────┐  ┌──────────┐  ┌──────────────┐            │
+│  │Social│  │ WP   │ │ SMTP │ │ WP   │  │ WAHA     │  │ Git Repo     │            │
+│  │Media │  │ REST │ │ IMAP │ │ Chat │  │ WhatsApp │  │ WP/LV Code   │            │
+│  │ APIs │  │ API  │ │ All  │ │Widget│  │ Server   │  │ Server Health│            │
+│  │      │  │      │ │boxes │ │      │  │          │  │              │            │
+│  └──────┘  └──┬───┘ └──────┘ └──────┘  └──────────┘  └──────┬───────┘            │
+│              │                                              │                    │
+│              │          ┌──────────────┐                    │                    │
+│              └─────────►│   LARAVEL    │◄───────────────────┘                    │
+│                         │   REST API   │                                         │
+│                         │ edufin.co.ke │                                         │
+│                         │  /api/v1     │                                         │
+│                         └──────┬───────┘                                         │
+│                                │                                                  │
+│                                ▼                                                  │
+│                         ┌──────────────┐                                         │
+│                         │ POSTGRESQL   │                                         │
+│                         │ (Audit Log   │                                         │
+│                         │  Storage)    │                                         │
+│                         └──────────────┘                                         │
 │                                                                                     │
 ├─────────────────────────────────────────────────────────────────────────────────────┤
 │                              EXISTING EDUFIN PLATFORM                               │
@@ -96,19 +114,24 @@ This layer is **non-invasive**: it interacts with WordPress and Laravel through 
 │   ┌─────────────────────┐              ┌─────────────────────────────────┐        │
 │   │   WORDPRESS         │              │   LARAVEL                       │        │
 │   │   edufin.co.ke      │              │   app.edufin.co.ke              │        │
-│   │   (Content, Blog)   │              │   (Portal, Admin, API)          │        │
+│   │   (Content, Blog,   │              │   (Portal, Admin, API)          │        │
+│   │    Chat Widget)     │              │                                 │        │
 │   └─────────────────────┘              └─────────────────────────────────┘        │
 │                                                                                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
+
+> **Social Media APIs:** X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube
+> **EduFin Mailboxes:** info@, support@, marketing@, customer_care@, communications@edufin.co.ke
 
 ## Agent Inventory
 
 | Agent | Type | MCP Role | Primary Domain | Key Capabilities |
 |-------|------|----------|----------------|------------------|
 | **Master Agent** | Orchestrator | MCP Host/Client | Cross-cutting | Task routing, result aggregation, HITL, escalation |
-| **Marketing Agent** | Sub-Agent | MCP Server | WordPress + Social | Trend analysis, content generation, X/Twitter posting |
-| **Email Agent** | Sub-Agent | MCP Server | Email (SMTP) | Conversation initiation, thread tracking, auto-response |
+| **Marketing Agent** | Sub-Agent | MCP Server | Social Media + WordPress + Email + WhatsApp | Trend analysis, content generation, multi-platform posting, SEO suggestions, email campaigns, WhatsApp broadcasts |
+| **Email Agent** | Sub-Agent | MCP Server | Email (SMTP/IMAP) | Conversation initiation, thread tracking, auto-response, multi-mailbox coordination |
+| **Support Agent** | Sub-Agent | MCP Server | Customer Support | WordPress chat widget, WhatsApp support (WAHA), email support, FAQ responses, staff escalation |
 | **Self-Healing Agent** | Sub-Agent | MCP Server | Infrastructure | Code monitoring, bug detection, patch generation, deployment |
 
 ## Technology Stack
@@ -132,8 +155,8 @@ The system follows the **Model Context Protocol** specification:
 |-------------|----------------------|
 | **MCP Host** | Master Agent — consumes tools/resources from sub-agents |
 | **MCP Client** | Master Agent's connection manager (1:1 per sub-agent) |
-| **MCP Server** | Each sub-agent (Marketing, Email, Self-Healing) |
-| **Tools** | Scoped capabilities exposed by each sub-agent (e.g., `post_tweet`, `send_email`, `run_diagnostic`) |
+| **MCP Server** | Each sub-agent (Marketing, Email, Support, Self-Healing) |
+| **Tools** | Scoped capabilities exposed by each sub-agent (e.g., `post_tweet`, `send_email`, `handle_chat_message`, `run_diagnostic`) |
 | **Resources** | Read-only data sources (e.g., WordPress content, email threads, server logs) |
 | **Prompts** | Pre-defined task templates for common agent workflows |
 
@@ -156,6 +179,7 @@ docs/architecture/ai-agents/
 ├── mcp-protocol.md             # MCP protocol specification & communication contracts
 ├── marketing-agent.md          # Marketing sub-agent scope & capabilities
 ├── email-agent.md              # Email marketing & communication sub-agent
+├── support-agent.md            # Support sub-agent (chat widget, WhatsApp, email support)
 ├── self-healing-agent.md       # Self-healing sub-agent scope
 └── integration.md              # Technical integration, data flow, error handling
 ```
@@ -167,6 +191,7 @@ docs/architecture/ai-agents/
 - [MCP Protocol Specification](./mcp-protocol.md)
 - [Marketing Agent](./marketing-agent.md)
 - [Email Agent](./email-agent.md)
+- [Support Agent](./support-agent.md)
 - [Self-Healing Agent](./self-healing-agent.md)
 - [Technical Integration & Workflow](./integration.md)
 - [Architecture Overview](../overview.md)

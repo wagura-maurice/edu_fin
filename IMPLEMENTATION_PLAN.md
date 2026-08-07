@@ -69,7 +69,7 @@
 │                                                                                     │
 │                              SHARED SERVICES                                      │
 │     ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐               │
-│     │      Redis      │  │   Cloudflare R2 │  │   Email/SMS     │               │
+│     │      Redis      │  │   Cloudflare R2 │  │ Email/WhatsApp  │               │
 │     │  (Sessions,     │  │   (File Storage)│  │   (Notifications│               │
 │     │   Cache)        │  │                 │  │    Services)    │               │
 │     └─────────────────┘  └─────────────────┘  └─────────────────┘               │

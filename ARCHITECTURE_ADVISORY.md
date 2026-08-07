@@ -116,7 +116,7 @@ The WordPress system is the public-facing brand presence for EduFin. It is a sta
 
 - **Purpose:** Public-facing marketing and content
 - **Managed by:** Secretarial/marketing staff
-- **Contains:** Marketing content, blog, FAQs, product pages
+- **Contains:** Marketing content, blog, FAQs, product pages, support chat widget (bottom-right)
 - **Does NOT contain:** Business data, PII, financial information, user accounts for the application
 
 ### 3.2 WordPress Security Hardening

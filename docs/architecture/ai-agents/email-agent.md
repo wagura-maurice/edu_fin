@@ -32,7 +32,7 @@ The Email Agent is a specialized sub-agent responsible for **email communication
 ├─────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                 │
 │  IN SCOPE:                                                                      │
-│  ✓ Monitor inbound emails on info@edufin.co.ke and support@edufin.co.ke       │
+│  ✓ Monitor inbound emails on all EduFin mailboxes (see Managed Mailboxes)     │
 │  ✓ Initiate outbound email conversations (campaigns, follow-ups)               │
 │  ✓ Track email threads and conversation state                                  │
 │  ✓ Generate and send automated responses to common inquiries                   │
@@ -40,6 +40,8 @@ The Email Agent is a specialized sub-agent responsible for **email communication
 │  ✓ Send scheduled email campaigns to subscriber lists                          │
 │  ✓ Detect when an email requires human (staff) response                        │
 │  ✓ Draft responses for staff review and approval                               │
+│  ✓ Coordinate with Marketing Agent for marketing@ mailbox campaigns            │
+│  ✓ Coordinate with Support Agent for customer_care@ and support@ mailboxes     │
 │                                                                                 │
 │  OUT OF SCOPE:                                                                  │
 │  ✗ Accessing Laravel user accounts or loan data directly                       │
@@ -54,10 +56,17 @@ The Email Agent is a specialized sub-agent responsible for **email communication
 
 ### Managed Mailboxes
 
-| Mailbox | Purpose | Agent Role |
-|---------|---------|------------|
-| `info@edufin.co.ke` | General inquiries, product questions, partnership requests | Monitor, auto-respond to FAQs, draft replies for staff |
-| `support@edufin.co.ke` | Customer support, account issues, complaint handling | Monitor, categorize, draft replies, escalate urgent issues |
+The Email Agent manages email communication across EduFin's mailboxes. Some mailboxes are shared with other agents (Marketing Agent, Support Agent) as noted below:
+
+| Mailbox | Purpose | Agent Role | Shared With |
+|---------|---------|------------|-------------|
+| `info@edufin.co.ke` | General inquiries, product questions, partnership requests | Monitor, auto-respond to FAQs, draft replies for staff | — |
+| `support@edufin.co.ke` | Customer support, account issues, complaint handling | Monitor, categorize, draft replies, escalate urgent issues | Support Agent (handles chat/WhatsApp-linked support emails) |
+| `marketing@edufin.co.ke` | Marketing campaigns, newsletters, promotional content | Coordinate with Marketing Agent for outbound campaigns | Marketing Agent (primary sender for marketing campaigns) |
+| `customer_care@edufin.co.ke` | Customer care inquiries, service complaints, feedback | Monitor, categorize, draft replies, escalate urgent issues | Support Agent (primary handler for customer care emails) |
+| `communications@edufin.co.ke` | Official company communications, press, partnerships | Monitor, draft replies for staff, escalate to management | — |
+
+> **Note:** The `marketing@edufin.co.ke` mailbox is primarily used by the **Marketing Agent** for outbound marketing campaigns (newsletters, promotional emails, product announcements). The Email Agent coordinates with the Marketing Agent to ensure thread tracking and deliverability monitoring are maintained across all mailboxes. The `customer_care@edufin.co.ke` and `support@edufin.co.ke` mailboxes are primarily handled by the **Support Agent** for customer support conversations that originate from the WordPress chat widget or WhatsApp; the Email Agent provides shared IMAP/SMTP infrastructure and thread tracking.
 
 ### External Service Dependencies
 
@@ -138,7 +147,10 @@ The Email Agent connects to EduFin's SMTP server for outbound email delivery. Co
 | Auth Method | `LOGIN` | Standard SMTP auth |
 | info@ Credentials | `info@edufin.co.ke` / `<password>` | Stored in Vault/env |
 | support@ Credentials | `support@edufin.co.ke` / `<password>` | Stored in Vault/env |
-| From Address | `info@edufin.co.ke` or `support@edufin.co.ke` | Per mailbox context |
+| marketing@ Credentials | `marketing@edufin.co.ke` / `<password>` | Stored in Vault/env (shared with Marketing Agent) |
+| customer_care@ Credentials | `customer_care@edufin.co.ke` / `<password>` | Stored in Vault/env (shared with Support Agent) |
+| communications@ Credentials | `communications@edufin.co.ke` / `<password>` | Stored in Vault/env |
+| From Address | Per mailbox context (info@, support@, marketing@, customer_care@, communications@) | Determined by conversation type |
 | Reply-To | Same as From | Responses route back to monitored mailbox |
 
 ### 3.2 IMAP Configuration (Inbound)
@@ -149,7 +161,7 @@ The Email Agent connects to EduFin's SMTP server for outbound email delivery. Co
 | IMAP Port | `993` | SSL |
 | Encryption | `SSL` | Encrypted inbound |
 | Polling Interval | Every 2 minutes | Configurable |
-| Folders Monitored | `INBOX` | Primary inbox per mailbox |
+| Folders Monitored | `INBOX` | Primary inbox per mailbox (info@, support@, marketing@, customer_care@, communications@) |
 | Processed Folder | `Agent_Processed` | Emails moved here after processing |
 | Escalated Folder | `Agent_Escalated` | Emails requiring staff attention |
 
@@ -205,7 +217,7 @@ The Email Agent can initiate outbound conversations in the following scenarios:
     "properties": {
       "from_address": {
         "type": "string",
-        "enum": ["info@edufin.co.ke", "support@edufin.co.ke"],
+        "enum": ["info@edufin.co.ke", "support@edufin.co.ke", "marketing@edufin.co.ke", "customer_care@edufin.co.ke", "communications@edufin.co.ke"],
         "description": "Sending mailbox"
       },
       "to_address": {
@@ -458,7 +470,7 @@ Auto-responses use pre-approved templates with dynamic variable substitution:
       },
       "from_address": {
         "type": "string",
-        "enum": ["info@edufin.co.ke", "support@edufin.co.ke"]
+        "enum": ["info@edufin.co.ke", "support@edufin.co.ke", "marketing@edufin.co.ke", "customer_care@edufin.co.ke", "communications@edufin.co.ke"]
       },
       "subject": {
         "type": "string",
@@ -534,9 +546,12 @@ Auto-responses use pre-approved templates with dynamic variable substitution:
 |----------|----------|-------------|
 | Inbox check (info@) | Every 2 minutes | Poll IMAP for new emails |
 | Inbox check (support@) | Every 2 minutes | Poll IMAP for new emails |
+| Inbox check (marketing@) | Every 2 minutes | Poll IMAP for new emails (coordinate with Marketing Agent) |
+| Inbox check (customer_care@) | Every 2 minutes | Poll IMAP for new emails (coordinate with Support Agent) |
+| Inbox check (communications@) | Every 5 minutes | Poll IMAP for new emails |
 | Follow-up check | 09:00 EAT daily | Check for threads with no response > 48 hours |
 | Stale thread cleanup | 17:00 EAT Friday | Mark unresolved threads > 7 days as ESCALATED |
-| Campaign schedule check | 08:00 EAT daily | Check for scheduled campaigns due today |
+| Campaign schedule check | 08:00 EAT daily | Check for scheduled campaigns due today (marketing@) |
 | Deliverability check | 06:00 EAT daily | Verify SPF/DKIM/DMARC records are valid |
 
 ### 8.2 Follow-Up Logic
@@ -556,6 +571,8 @@ The Email Agent sends follow-up messages in these scenarios:
 - [AI Agents Overview](./README.md)
 - [MCP Protocol Specification](./mcp-protocol.md)
 - [Master Agent Architecture](./master-agent.md)
+- [Marketing Agent](./marketing-agent.md)
+- [Support Agent](./support-agent.md)
 - [Technical Integration & Workflow](./integration.md)
 - [Laravel Architecture](../laravel/README.md)
 - [WordPress Architecture](../wordpress/README.md)

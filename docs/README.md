@@ -27,8 +27,9 @@ docs/
 │       ├── README.md                   # AI Agents architecture overview
 │       ├── master-agent.md             # Master Agent orchestration & HITL
 │       ├── mcp-protocol.md             # MCP protocol specification
-│       ├── marketing-agent.md          # Marketing sub-agent
+│       ├── marketing-agent.md          # Marketing sub-agent (social media, SEO, email, WhatsApp)
 │       ├── email-agent.md              # Email & communication sub-agent
+│       ├── support-agent.md            # Support sub-agent (chat widget, WhatsApp, email support)
 │       ├── self-healing-agent.md       # Self-healing sub-agent
 │       └── integration.md              # Technical integration & workflow
 │
