@@ -72,8 +72,13 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 | Laravel → CBS | HTTPS + mTLS | Financial operations |
 | Mobile → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + JWT | Client access |
 | CBS → Laravel API (`edufin.co.ke/api/v1`) | HTTPS + Webhook | Payment notifications |
+| AI Agents → WordPress | HTTPS REST + SSH | Content management, health monitoring |
+| AI Agents → Laravel | HTTPS REST + SSH | Product data, audit logging, health monitoring |
+| AI Agents → External | HTTPS + SMTP/IMAP + SSH | X/Twitter, email, Git, server access |
 
-> **Note:** There is no integration between WordPress and Laravel. Each system operates independently. The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain.
+> **Note:** There is no direct integration between WordPress and Laravel. Each system operates independently. The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain.
+>
+> **AI Agents Layer:** The AI Agents module is a non-invasive intelligence layer that interacts with both WordPress and Laravel through their existing APIs and SSH access. It does not modify core business logic or access PII/financial data. See [AI Agents Architecture](./ai-agents/README.md) for full details.
 
 ## Key Principles
 
@@ -81,9 +86,11 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 2. **Security by Design** - Financial data isolated in Laravel
 3. **API-First** - All logic exposed via versioned APIs
 4. **Scalability** - Stateless design, horizontal scaling
+5. **Non-Invasive Agent Layer** - AI agents interact via existing APIs; no core modifications
 
 ---
 
 **See Also:**
 - [WordPress Architecture](./wordpress/README.md)
 - [Laravel Architecture](./laravel/README.md)
+- [AI Agents Architecture](./ai-agents/README.md)

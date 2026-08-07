@@ -23,6 +23,15 @@ docs/
 │       ├── services.md                 # Business services
 │       └── banking-integration.md      # Core banking integration
 │
+│   ai-agents/                          # AI Agents (Agentic Intelligence Layer)
+│       ├── README.md                   # AI Agents architecture overview
+│       ├── master-agent.md             # Master Agent orchestration & HITL
+│       ├── mcp-protocol.md             # MCP protocol specification
+│       ├── marketing-agent.md          # Marketing sub-agent
+│       ├── email-agent.md              # Email & communication sub-agent
+│       ├── self-healing-agent.md       # Self-healing sub-agent
+│       └── integration.md              # Technical integration & workflow
+│
 ├── api/                                # API documentation
 │   ├── README.md                       # API overview
 │   ├── authentication.md               # Auth endpoints
@@ -58,6 +67,7 @@ docs/
 - [Implementation Guide](./implementation.md) - Technical implementation
 - [API Documentation](./api/README.md) - API reference
 - [Developer Setup](./guides/developer-setup.md) - Development environment
+- [AI Agents Architecture](./architecture/ai-agents/README.md) - Agentic intelligence layer
 
 ### For Operations
 - [Deployment Guide](./deployment/README.md) - Infrastructure & deployment
@@ -75,4 +85,5 @@ docs/
 | Project Documentation | 1.0 | 2026-08-06 |
 | Implementation Guide | 1.0 | 2026-08-06 |
 | Architecture Docs | 1.0 | 2026-08-06 |
+| AI Agents Architecture | 1.0 | 2026-08-08 |
 
