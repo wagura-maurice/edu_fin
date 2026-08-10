@@ -331,8 +331,9 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
 │  │                                                                         │  │
-│  │  1. WORDPRESS WEBSITE                                    KSH 50,000    │  │
+│  │  1. WORDPRESS WEBSITE                                    KSH 30,000    │  │
 │  │     ─────────────────────────────────────────────────────────────────  │  │
+│  │     Original: KSH 50,000  |  Discount: KSH 20,000  |  Saved: 40%       │  │
 │  │                                                                         │  │
 │  │     Deliverables:                                                      │  │
 │  │     • Custom responsive theme (EduFin branding)                        │  │
@@ -354,8 +355,9 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
 │  │                                                                         │  │
-│  │  2. LARAVEL APPLICATION                                  KSH 150,000   │  │
+│  │  2. LARAVEL APPLICATION                                  KSH 120,000   │  │
 │  │     ─────────────────────────────────────────────────────────────────  │  │
+│  │     Original: KSH 150,000  |  Discount: KSH 30,000  |  Saved: 20%       │  │
 │  │                                                                         │  │
 │  │     Deliverables:                                                      │  │
 │  │                                                                         │  │
@@ -412,7 +414,8 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │                                                                                 │
 │  ┌─────────────────────────────────────────────────────────────────────────┐  │
 │  │                                                                         │  │
-│  │  TOTAL PROJECT COST                                      KSH 200,000   │  │
+│  │  TOTAL PROJECT COST                                      KSH 150,000   │  │
+│  │     Original: KSH 200,000  |  Total Discount: KSH 50,000  |  Saved 25% │  │
 │  │                                                                         │  │
 │  └─────────────────────────────────────────────────────────────────────────┘  │
 │                                                                                 │
@@ -440,6 +443,29 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 | **Cloudflare Account** | Client responsibility |
 | **Third-party API Costs** | WhatsApp (WAHA), Email services (pay-as-you-go) |
 | **Content Creation** | Text, images, videos for website |
+
+### 6.4 Discount Schedule
+
+A goodwill discount has been applied to the development costs in §6.1. The discount is itemized per system below and is reflected in the final project total and the payment schedule in §7.2.
+
+| # | System | Original Price (KSH) | Discount (KSH) | Discount % | Discounted Price (KSH) |
+|---|--------|---------------------:|---------------:|-----------:|-----------------------:|
+| 1 | WordPress Website | 50,000 | 20,000 | 40% | 30,000 |
+| 2 | Laravel Application | 150,000 | 30,000 | 20% | 120,000 |
+| | **Project Total** | **200,000** | **50,000** | **25%** | **150,000** |
+
+#### 6.4.1 Discount Terms & Conditions
+
+- **Validity:** This discount is valid for **30 days** from the date of issue of this proposal, consistent with the quotation validity in §8.5.
+- **Non-redeemable:** The discount is a reduction on the development fee only. It is **not** payable in cash, transferable, or redeemable against any other service or invoice.
+- **Scope lock:** The discounted pricing applies to the deliverables explicitly listed in §6.1 only. Any additional features, change requests, or out-of-scope work will be quoted at standard rates and are **not** eligible for this discount.
+- **Milestone linkage:** The discount is embedded in the milestone payment schedule (§7.2). If the project is terminated by the client before completion, amounts for completed milestones remain payable at the discounted rates shown; unearned discounts on incomplete milestones are forfeited.
+- **Exclusions:** The discount does **not** apply to recurring infrastructure costs (§6.2), third-party API costs, domain registration, or any item listed in §6.3.
+- **Withdrawal:** The vendor reserves the right to withdraw this discount if the project does not commence within the validity period. Standard pricing (KSH 200,000) will then apply.
+
+#### 6.4.2 Rationale
+
+The discount is offered as a goodwill gesture to support the EduFin Kenya mission of expanding access to education financing in Kenya, and to reflect a long-term partnership commitment. It is not a reflection of reduced scope or deliverable quality — all items listed in §6.1 remain fully in scope at the discounted price.
 
 ---
 
@@ -508,14 +534,16 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 
 ### 7.2 Payment Schedule
 
+> Amounts below reflect the **discounted** project total of KSH 150,000 (see §6.4 for discount details).
+
 | Milestone | Percentage | Amount (KSH) | Due |
 |-----------|------------|--------------|-----|
-| Project Kickoff | 30% | 60,000 | Upon signing |
-| WordPress Completion | 20% | 40,000 | Week 4 |
-| Laravel Portal Completion | 25% | 50,000 | Week 8 |
-| API & Integration Complete | 15% | 30,000 | Week 10 |
-| Go-Live & Handover | 10% | 20,000 | Week 14 |
-| **Total** | **100%** | **200,000** | |
+| Project Kickoff | 30% | 45,000 | Upon signing |
+| WordPress Completion | 20% | 30,000 | Week 4 |
+| Laravel Portal Completion | 25% | 37,500 | Week 8 |
+| API & Integration Complete | 15% | 22,500 | Week 10 |
+| Go-Live & Handover | 10% | 15,000 | Week 14 |
+| **Total** | **100%** | **150,000** | |
 
 ---
 
