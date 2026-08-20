@@ -2,8 +2,8 @@
 
 ## Company Landing Page
 
-**Version:** 1.0  
-**Last Updated:** August 6, 2026
+**Version:** 2.0  
+**Last Updated:** August 10, 2026
 
 ---
 
@@ -23,7 +23,8 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  • Marketing content management                                                │
 │  • SEO optimization                                                            │
 │  • Customer support chat widget (bottom-right corner)                          │
-│  • Links to Laravel portal for login & registration                            │
+  • Client onboarding wizard (/get-started) — submits to Laravel API            │
+  • Links to Laravel portal for login (registration via API, not a link)        │
 │                                                                                 │
 │  MANAGED BY:                                                                   │
 │  • Secretarial staff (content)                                                 │
@@ -38,8 +39,9 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │                                                                                 │
 │  LINKS TO LARAVEL:                                                             │
 │  • Login button → app.edufin.co.ke/login                                       │
-│  • Register button → app.edufin.co.ke/register                                 │
-│  • Standard HTML links (no API or SSO integration)                             │
+  • Onboarding wizard → edufin.co.ke/get-started (submits to Laravel API)       │
+  • Consumes Laravel API: POST /api/v1/auth/register + GET /api/v1/options/*    │
+  • No SSO, no shared sessions (API contract only)                              │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
 ```
@@ -69,10 +71,14 @@ WordPress serves as the **standalone company landing page**, completely decouple
 
 ## Custom Plugins
 
-WordPress does not use custom plugins for Laravel integration. Login and registration buttons on the WordPress site link directly to the Laravel portal via standard HTML links:
+WordPress does not use custom plugins for Laravel integration. The login button links directly to the Laravel portal. Registration is handled by the onboarding wizard, which consumes the Laravel REST API:
 
-- **Login:** `app.edufin.co.ke/login`
-- **Register:** `app.edufin.co.ke/register`
+- **Login (link):** `app.edufin.co.ke/login`
+- **Onboarding wizard (WordPress page):** `edufin.co.ke/get-started`
+  - Fetches dynamic options: `GET edufin.co.ke/api/v1/options/*`
+  - Submits registration: `POST edufin.co.ke/api/v1/auth/register`
+
+> **Note:** During the current development phase, the wizard uses mock/demo REST API calls to simulate the Laravel backend integration. The mock endpoints are served by WordPress itself (via WordPress REST API routes) and return the same JSON shape that the real Laravel endpoints will return. Switching to the real Laravel backend only requires changing the API base URL.
 
 ## Approved Third-Party Plugins
 
@@ -111,6 +117,52 @@ The WordPress site includes a **support chat widget** embedded in the bottom-rig
 | **Data stored** | Conversation transcripts, visitor contact info (if provided) — NO PII from Laravel |
 
 > **Note:** The support chat widget does NOT access Laravel business data (loans, clients, KYC). It can answer FAQs about EduFin products and direct visitors to the Laravel portal for account-specific actions. The widget is managed by the AI Agents layer and does not require a WordPress plugin — it is a lightweight JavaScript embed that connects directly to the Support Agent backend.
+
+## Client Onboarding Wizard
+
+The WordPress site hosts a multi-step "Get Started" onboarding wizard at `edufin.co.ke/get-started`. This wizard is the primary client registration interface — it collects client data across multiple steps and submits it to the Laravel registration API.
+
+### Wizard Steps
+
+| Step | Title | Fields |
+|------|-------|--------|
+| 1 | Personal Details | Full name, email, phone, gender (dynamic), location/county (dynamic) |
+| 2 | Employment & Income | Employment type (dynamic), employer name, monthly income range (dynamic) |
+| 3 | Education Beneficiary | Beneficiary name, relationship (dynamic), school name, education level (dynamic) |
+| 4 | Account Setup | Password, confirm password, terms agreement |
+| 5 | Review & Confirm | Summary of all entered data — user confirms before submission |
+
+### Dynamic Options
+
+Dropdown fields (gender, location, employment type, income range, education level, relationship type) are populated via API calls to Laravel's `/options/*` endpoints. This ensures the wizard always reflects the latest backend data without WordPress code changes.
+
+### Mock API (Current Phase)
+
+During the current development phase, the wizard uses **mock/demo REST API calls** to simulate the Laravel backend. The mock endpoints are registered as WordPress REST routes (`/wp-json/edufin/v1/options/*`) and return the same JSON shape as the future Laravel endpoints. Switching to production only requires updating the API base URL configuration.
+
+### Data Flow
+
+```
+WordPress Wizard                Laravel API
+─────────────────               ─────────────────
+Load wizard
+  │
+  ├── GET /options/* ──────────► Returns JSON option lists
+  │     ◄──────────────────────  { locations, genders, ... }
+  │
+  User completes steps 1–4
+  │
+  Step 5: Review & confirm
+  │
+  └── POST /auth/register ─────► Validates + creates user
+        ◄──────────────────────  { token, account_id }
+  │
+  Show success screen
+  │
+  └── Link to app.edufin.co.ke/login
+```
+
+> **Important:** The WordPress wizard collects and forwards data but does **not** persist PII. All data storage happens in Laravel. The wizard only retains data in the browser (JavaScript state) during the wizard session and discards it after submission.
 
 ## Security Configuration
 

@@ -2,8 +2,8 @@
 
 ## Core Application Engine
 
-**Version:** 1.0  
-**Last Updated:** August 6, 2026
+**Version:** 2.0  
+**Last Updated:** August 10, 2026
 
 ---
 
@@ -112,6 +112,7 @@ Laravel serves as the **central engine** of the EduFin platform, powering all bu
 **URL:** `edufin.co.ke/api/v1`
 
 **Consumers:**
+- WordPress onboarding wizard (registration + dynamic options) — **primary consumer**
 - Flutter mobile app (iOS/Android)
 - Future partner integrations
 
@@ -167,6 +168,57 @@ app/Services/
 - `documents` - Document metadata
 - `payments` - Payment records
 - `audit_logs` - Audit trail
+
+## Registration Architecture (API-Only)
+
+The Laravel application does **not** host a front-end `/register` page. Registration is handled exclusively via the REST API, following an API-first design that separates the onboarding UI from the data logic.
+
+### Responsibilities
+
+| Layer | Owner | Responsibility |
+|-------|-------|----------------|
+| Onboarding UI | WordPress (`edufin.co.ke/get-started`) | Multi-step wizard, client-side validation, user experience |
+| Registration data logic | Laravel API (`edufin.co.ke/api/v1/auth/register`) | Server-side validation, user creation, business rules |
+| Dynamic options | Laravel API (`edufin.co.ke/api/v1/options/*`) | Locations, genders, employment types, income ranges, education levels, relationship types |
+
+### Laravel UI (Web Routes)
+
+The Laravel web UI is intentionally limited to authentication and password management only:
+
+| Route | Purpose |
+|-------|---------|
+| `/login` | Unified login (clients + staff), role-based redirect |
+| `/forgot-password` | Password reset request (email link) |
+| `/password/reset` | Password reset form (link landing) |
+| `/logout` | End session |
+
+> **No `/register` route.** This prevents a duplicate onboarding surface and keeps all registration logic centralized in the API layer.
+
+### Registration API Endpoint
+
+```
+POST https://edufin.co.ke/api/v1/auth/register
+```
+
+**Consumers:**
+- WordPress onboarding wizard (primary, today)
+- Flutter mobile app (future)
+
+**Request:** Client registration data (personal details, employment, beneficiary, credentials).
+**Response:** JWT token + account ID on success; validation errors on failure.
+
+### Dynamic Options Endpoints
+
+The wizard's dropdown fields are populated from Laravel so they always reflect the latest backend data without WordPress code changes:
+
+| Endpoint | Options |
+|----------|---------|
+| `GET /api/v1/options/locations` | Counties/cities |
+| `GET /api/v1/options/genders` | Gender options |
+| `GET /api/v1/options/employment-types` | Employment types |
+| `GET /api/v1/options/income-ranges` | Income ranges |
+| `GET /api/v1/options/education-levels` | Education levels |
+| `GET /api/v1/options/relationship-types` | Beneficiary relationship types |
 
 ## Security Implementation
 

@@ -1,26 +1,26 @@
 # EduFin - Site Links Reference
 
-**Version:** 1.1  
-**Last Updated:** August 6, 2026
+**Version:** 2.0  
+**Last Updated:** August 10, 2026
 
 ---
 
 ## Overview
 
-EduFin operates as two entirely separate and independent systems. This document lists the public URLs, page routes, and API endpoints for each system.
+EduFin operates as two separate systems with a clearly defined API contract between them. WordPress is the public-facing marketing site **and the client onboarding interface**; Laravel is the core application engine that exposes a REST API consumed by WordPress (for onboarding) and by future mobile applications.
 
 | System | Domain | Technology | Purpose |
 |--------|--------|------------|---------|
-| Public Website | `edufin.co.ke` | WordPress | Marketing, SEO, blog, content |
+| Public Website + Onboarding | `edufin.co.ke` | WordPress | Marketing, SEO, blog, content, **client onboarding wizard** |
 | Application | `app.edufin.co.ke` | Laravel (Livewire) | Client portal, admin panel, KYC, loans, statements |
-| REST API | `edufin.co.ke/api/v1` | Laravel | Mobile app, webhooks, integrations (path-based on main domain) |
+| REST API | `edufin.co.ke/api/v1` | Laravel | Registration, dynamic options, mobile app, webhooks, integrations (path-based on main domain) |
 | Static Assets | `cdn.edufin.co.ke` | Cloudflare R2 | Media, images, CSS, JS |
 
-> **Note:** The two systems are independent. WordPress links to the Laravel application only via standard public HTTP links (e.g., "Login" / "Get Started" buttons). There is no SSO, no shared sessions, and no API integration between them.
+> **Note:** The two systems are connected by a REST API contract. WordPress consumes Laravel's registration and dynamic-options endpoints to power the onboarding wizard. WordPress links to the Laravel application for login via standard public HTTP links. There is no SSO and no shared sessions.
 >
 > **API Routing:** The REST API is served via a path-based prefix on the main domain (`edufin.co.ke/api/v1/...`) rather than a dedicated API subdomain. Nginx routes `/api/` requests on `edufin.co.ke` to the Laravel application.
 >
-> **Authentication:** All users (clients and staff) access the login interface at `app.edufin.co.ke/login`. Onboarding/registration occurs at `app.edufin.co.ke/register`. After a successful login, the system redirects users to their respective dashboards based on their assigned roles.
+> **Authentication:** All users (clients and staff) access the login interface at `app.edufin.co.ke/login`. **Registration/onboarding no longer occurs on the Laravel UI.** Instead, the WordPress site hosts an onboarding wizard (`edufin.co.ke/get-started`) that collects client data and submits it to the Laravel registration API (`edufin.co.ke/api/v1/auth/register`). After a successful login, the system redirects users to their respective dashboards based on their assigned roles.
 
 ---
 
@@ -35,6 +35,7 @@ EduFin operates as two entirely separate and independent systems. This document 
 | `https://edufin.co.ke/how-it-works` | How It Works | Process explanation |
 | `https://edufin.co.ke/calculator` | Calculator | Loan calculator widget |
 | `https://edufin.co.ke/blog` | Blog | Articles, news, announcements |
+| `https://edufin.co.ke/get-started` | Get Started (Onboarding) | Multi-step client onboarding wizard |
 | `https://edufin.co.ke/contact` | Contact | Contact form and details |
 | `https://edufin.co.ke/about` | About Us | Company information |
 | `https://edufin.co.ke/faq` | FAQs | Help content |
@@ -51,13 +52,13 @@ EduFin operates as two entirely separate and independent systems. This document 
 
 ### 1.3 Cross-Links to Laravel Application
 
-These are standard public hyperlinks rendered in the WordPress header (no authentication handoff):
+These are hyperlinks rendered in the WordPress header. The "Get Started" link now points to the **WordPress onboarding wizard** (not the Laravel UI), since registration is handled via the API:
 
 | Link Label | Target URL | Purpose |
 |------------|------------|---------|
 | Login | `https://app.edufin.co.ke/login` | Client/staff login (role-based redirect after auth) |
-| Get Started | `https://app.edufin.co.ke/register` | New client onboarding / registration |
-| My Portal | `https://app.edufin.co.ke/dashboard` | Client dashboard (when logged in) |
+| Get Started | `https://edufin.co.ke/get-started` | New client onboarding wizard (WordPress; submits to Laravel API) |
+| Client Portal | `https://app.edufin.co.ke/login` | External application login (footer + topbar link) |
 
 ---
 
@@ -65,12 +66,16 @@ These are standard public hyperlinks rendered in the WordPress header (no authen
 
 ### 2.1 Authentication & Onboarding
 
+> **Important:** The Laravel application does **not** host a front-end `/register` page. Registration is handled exclusively via the REST API (`edufin.co.ke/api/v1/auth/register`), which is consumed by the WordPress onboarding wizard and future mobile applications. The Laravel UI only provides `/login`, `/forgot-password`, and the standard password reset mechanisms.
+
 | URL | Page | Auth | Description |
 |-----|------|------|-------------|
 | `https://app.edufin.co.ke/login` | Login | Public | Unified login for all users (clients and staff) |
-| `https://app.edufin.co.ke/register` | Register | Public | New client onboarding / registration |
 | `https://app.edufin.co.ke/forgot-password` | Forgot Password | Public | Password reset request |
+| `https://app.edufin.co.ke/password/reset` | Password Reset | Public | Password reset form (email link landing) |
 | `https://app.edufin.co.ke/logout` | Logout | Authenticated | End session |
+
+> **Registration (API-only):** `POST https://edufin.co.ke/api/v1/auth/register` — no web page. The WordPress onboarding wizard at `edufin.co.ke/get-started` collects client data across multiple steps and submits to this endpoint. See [Registration Flow](#registration-flow) below.
 
 #### Role-Based Redirection After Login
 
@@ -85,6 +90,51 @@ After a successful login at `app.edufin.co.ke/login`, the system redirects users
 | Super Admin | `https://app.edufin.co.ke/admin` | Full system access (Filament) |
 
 > **Note:** The `admin.edufin.co.ke` subdomain has been removed. The admin panel (Filament) is now served at the path `app.edufin.co.ke/admin`. All staff roles are redirected there after login.
+
+### 2.1.1 Registration Flow
+
+The registration process is split across the two platforms: **WordPress** acts as the onboarding interface (UI), and **Laravel** manages the data logic and dynamic options (API).
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│                          REGISTRATION / ONBOARDING FLOW                              │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                     │
+│  WORDPRESS (edufin.co.ke/get-started)            LARAVEL API (edufin.co.ke/api/v1)  │
+│  ─────────────────────────────────────            ─────────────────────────────────  │
+│                                                                                     │
+│  1. User visits the "Get Started" onboarding wizard                                 │
+│     on the WordPress site.                                                          │
+│                                                                                     │
+│  2. Wizard loads ──────────────────────────────►  GET /options/locations            │
+│     dynamic dropdown options                       GET /options/genders              │
+│     (Location, Gender, Employment, etc.)          GET /options/employment-types     │
+│     via API calls ◄──────────────────────────────  (returns JSON option lists)      │
+│                                                                                     │
+│  3. User completes multiple wizard steps:                                           │
+│     Step 1: Personal details (name, email, phone, gender, location)                 │
+│     Step 2: Employment & income (employment type, income range)                     │
+│     Step 3: Education beneficiary (school, level, relationship)                     │
+│     Step 4: Account credentials (password, confirm)                                 │
+│     Step 5: Review & confirm (summary of all entered data)                          │
+│                                                                                     │
+│  4. User confirms ──────────────────────────────►  POST /auth/register              │
+│     submission                                     (validates, creates user,         │
+│     ◄───────────────────────────────────────────   returns JWT + account ID)        │
+│                                                                                     │
+│  5. WordPress shows success screen with a                                          │
+│     "Proceed to Login" link ─────────────────────►  app.edufin.co.ke/login          │
+│                                                                                     │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+**Key principles:**
+
+- **WordPress** owns the onboarding **UI** — the multi-step wizard, form validation (client-side), and user experience. It does **not** store business data; it only collects and forwards it.
+- **Laravel** owns the onboarding **data logic** — server-side validation, user creation, dynamic option sources (locations, genders, employment types, etc.), and the registration business rules.
+- **Dynamic options** (dropdowns for Location, Gender, Employment Type, Income Range, Education Level, Relationship Type) are fetched from Laravel's `/options/*` endpoints at wizard load time, so the WordPress wizard always reflects the latest backend data without code changes.
+- The registration API is designed to be **consumer-agnostic**: the WordPress site is the primary consumer today, and future mobile applications (Flutter) will consume the same `POST /auth/register` endpoint.
+- The Laravel UI intentionally has **no `/register` page** — this prevents a duplicate onboarding surface and keeps all registration logic centralized in the API layer.
 
 ### 2.2 Client Portal (Web - Livewire)
 
@@ -138,6 +188,12 @@ After a successful login at `app.edufin.co.ke/login`, the system redirects users
 | GET | `https://edufin.co.ke/api/v1/packages` | List financing packages |
 | GET | `https://edufin.co.ke/api/v1/packages/{slug}` | Package details |
 | GET | `https://edufin.co.ke/api/v1/calculator/rates` | Loan calculator rates |
+| GET | `https://edufin.co.ke/api/v1/options/locations` | List locations (counties/cities) for onboarding dropdowns |
+| GET | `https://edufin.co.ke/api/v1/options/genders` | List gender options for onboarding dropdowns |
+| GET | `https://edufin.co.ke/api/v1/options/employment-types` | List employment types for onboarding dropdowns |
+| GET | `https://edufin.co.ke/api/v1/options/income-ranges` | List income ranges for onboarding dropdowns |
+| GET | `https://edufin.co.ke/api/v1/options/education-levels` | List education levels for onboarding dropdowns |
+| GET | `https://edufin.co.ke/api/v1/options/relationship-types` | List relationship types (beneficiary) for onboarding dropdowns |
 | POST | `https://edufin.co.ke/api/v1/inquiries` | Submit contact inquiry |
 | POST | `https://edufin.co.ke/api/v1/newsletter/subscribe` | Newsletter signup |
 
@@ -235,17 +291,23 @@ After a successful login at `app.edufin.co.ke/login`, the system redirects users
 ```
 edufin.co.ke
 ├── /                          → WordPress (PHP-FPM 8.2)
+├── /get-started               → WordPress (onboarding wizard; submits to Laravel API)
 ├── /products, /blog, /about   → WordPress (PHP-FPM 8.2)
 ├── /wp-admin, /wp-login.php   → WordPress (PHP-FPM 8.2)
 └── /api/                      → Laravel (PHP-FPM 8.3) [reverse proxy]
 
 app.edufin.co.ke
 ├── /login                     → Laravel (auth, role-based redirect)
-├── /register                  → Laravel (onboarding)
+├── /forgot-password           → Laravel (password reset request)
+├── /password/reset            → Laravel (password reset form)
 ├── /dashboard                 → Laravel (client portal, Livewire)
 ├── /admin                     → Laravel (Filament admin panel)
 ├── /profile, /loans, /kyc     → Laravel (client portal, Livewire)
 └── /api/v1/*                  → Laravel (REST API, same app)
+
+  NOTE: app.edufin.co.ke/register no longer exists.
+        Registration is API-only: POST edufin.co.ke/api/v1/auth/register
+        consumed by the WordPress onboarding wizard (edufin.co.ke/get-started).
 
 cdn.edufin.co.ke
 └── /                          → Cloudflare R2 (static assets)
@@ -259,3 +321,4 @@ cdn.edufin.co.ke
 |---------|------|--------|---------|
 | 1.0 | 2026-08-06 | EduFin Technical Team | Initial site links reference |
 | 1.1 | 2026-08-06 | EduFin Technical Team | API moved to edufin.co.ke/api/v1 path-based routing; admin.edufin.co.ke removed (admin at app.edufin.co.ke/admin); login at app.edufin.co.ke/login with role-based redirect; onboarding at app.edufin.co.ke/register |
+| 2.0 | 2026-08-10 | EduFin Technical Team | Registration architecture change: Laravel no longer hosts a front-end /register page (API-only registration via POST /api/v1/auth/register). WordPress now hosts the onboarding wizard at edufin.co.ke/get-started. Added /options/* endpoints for dynamic dropdowns. Laravel UI limited to /login, /forgot-password, /password/reset. |
