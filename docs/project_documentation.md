@@ -187,7 +187,7 @@ EduFin addresses these challenges through:
 - Blog articles and news
 - FAQs and help content
 - Contact information
-- Legal documents (Terms, Privacy Policy)
+- Legal documents (Terms & Conditions, Privacy Policy, Data Protection, Cookie Policy, Refund & Cancellation, Complaints & Disputes, Regulatory & Licensing)
 
 **Administrative Access:**
 - Secretarial staff: Content editing, media management

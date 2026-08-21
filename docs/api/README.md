@@ -17,7 +17,7 @@
 See detailed documentation:
 - [Authentication](./authentication.md)
 - [Clients](./clients.md)
-- [Loans](./loans.md)
+- [Loans](./loans.md) (includes public tracking endpoint)
 - [Webhooks](./webhooks.md)
 
 ## Rate Limits
@@ -25,5 +25,6 @@ See detailed documentation:
 | Endpoint Type | Limit |
 |---------------|-------|
 | Public | 100 req/min |
+| Public (loan tracking) | 20 req/min per IP |
 | Authenticated | 60 req/min per user |
 | Webhooks | Unlimited |

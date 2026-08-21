@@ -24,6 +24,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  • SEO optimization                                                            │
 │  • Customer support chat widget (bottom-right corner)                          │
   • Client onboarding wizard (/get-started) — submits to Laravel API            │
+  • Public loan tracking (/track-application) — consumes Laravel tracking API  │
   • Links to Laravel portal for login (registration via API, not a link)        │
 │                                                                                 │
 │  MANAGED BY:                                                                   │
@@ -40,7 +41,9 @@ WordPress serves as the **standalone company landing page**, completely decouple
 │  LINKS TO LARAVEL:                                                             │
 │  • Login button → app.edufin.co.ke/login                                       │
   • Onboarding wizard → edufin.co.ke/get-started (submits to Laravel API)       │
+  • Loan tracking → edufin.co.ke/track-application (consumes Laravel tracking API) │
   • Consumes Laravel API: POST /api/v1/auth/register + GET /api/v1/options/*    │
+  • Consumes Laravel API: GET /api/v1/loans/track/{reference}                  │
   • No SSO, no shared sessions (API contract only)                              │
 │                                                                                 │
 └─────────────────────────────────────────────────────────────────────────────────┘
@@ -55,7 +58,7 @@ WordPress serves as the **standalone company landing page**, completely decouple
 | Blog/News | Articles, announcements | Weekly |
 | FAQs | Help content | As needed |
 | Testimonials | Client reviews | Monthly |
-| Legal Documents | Terms, Privacy Policy | Annually |
+| Legal Documents | Terms & Conditions, Privacy Policy, Data Protection, Cookie Policy, Refund & Cancellation, Complaints & Disputes, Regulatory & Licensing | Annually |
 | Contact Info | Addresses, phones | As needed |
 | Support Chat Widget | Bottom-right chat widget (powered by Support Agent) | Always active |
 
@@ -71,12 +74,16 @@ WordPress serves as the **standalone company landing page**, completely decouple
 
 ## Custom Plugins
 
-WordPress does not use custom plugins for Laravel integration. The login button links directly to the Laravel portal. Registration is handled by the onboarding wizard, which consumes the Laravel REST API:
+WordPress does not use custom plugins for Laravel integration. The login button links directly to the Laravel portal. Registration is handled by the onboarding wizard, and loan status tracking is handled by the tracking page — both consume the Laravel REST API:
 
 - **Login (link):** `app.edufin.co.ke/login`
 - **Onboarding wizard (WordPress page):** `edufin.co.ke/get-started`
   - Fetches dynamic options: `GET edufin.co.ke/api/v1/options/*`
   - Submits registration: `POST edufin.co.ke/api/v1/auth/register`
+- **Loan tracking (WordPress page):** `edufin.co.ke/track-application`
+  - Looks up status: `GET edufin.co.ke/api/v1/loans/track/{reference}`
+  - Returns only whitelisted public fields (no financial amounts or PII)
+  - See [Public Loan Tracking](../../features/public-loan-tracking.md) for full specification
 
 > **Note:** During the current development phase, the wizard uses mock/demo REST API calls to simulate the Laravel backend integration. The mock endpoints are served by WordPress itself (via WordPress REST API routes) and return the same JSON shape that the real Laravel endpoints will return. Switching to the real Laravel backend only requires changing the API base URL.
 
@@ -163,6 +170,39 @@ Load wizard
 ```
 
 > **Important:** The WordPress wizard collects and forwards data but does **not** persist PII. All data storage happens in Laravel. The wizard only retains data in the browser (JavaScript state) during the wizard session and discards it after submission.
+
+## Public Loan Tracking
+
+The WordPress site hosts a public "Track Application" page at `edufin.co.ke/track-application`. This page allows anyone — applicants, obligors, or third parties — to check the status of a loan application by entering a tracking number, **without logging in to the Laravel portal**.
+
+### How It Works
+
+1. User visits the "Track Application" page on the WordPress site
+2. User enters their tracking number (format: `EDF-YYYY-XXXXXX`) and passes Turnstile verification
+3. JavaScript calls `GET edufin.co.ke/api/v1/loans/track/{reference}` with the public API key
+4. Laravel looks up the loan facility and returns a **whitelisted** set of non-sensitive fields
+5. JavaScript renders a status card showing: status badge, package name, beneficiary initials, application date, last updated date, and a link to the portal for full details
+
+### Data Classification
+
+The tracking endpoint returns **only** non-sensitive public fields:
+
+| Field | Example | Sensitive? |
+|-------|---------|------------|
+| `reference` | `EDF-2026-08X7K2` | No (user already knows this) |
+| `status` / `status_label` | `ACTIVE` / "Active" | No (status enum only) |
+| `package_name` | "University Financing" | No (public on /products page) |
+| `beneficiary_initials` | "John D." | No (first name + last initial only) |
+| `application_date` | "2026-07-15" | No (date only) |
+| `last_updated` | "2026-08-01" | No (date only) |
+
+All financial amounts (principal, interest, balance), personal information (full names, email, phone), collateral details, and document URLs remain in the authenticated Laravel portal only.
+
+### Mock API (Current Phase)
+
+During the current development phase, the tracking page uses a mock WordPress REST endpoint (`/wp-json/edufin/v1/loans/track/{reference}`) that returns the same JSON shape as the future Laravel endpoint. Switching to production only requires updating the API base URL configuration — identical to the onboarding wizard migration path.
+
+> **Full specification:** See [Public Loan Tracking](../../features/public-loan-tracking.md) for the complete technical specification, including API contract, security controls, data classification, and implementation phases.
 
 ## Security Configuration
 

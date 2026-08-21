@@ -49,9 +49,10 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 ### WordPress (Landing Page + Onboarding Interface)
 - **Purpose:** Public-facing brand presence **and client onboarding interface**
 - **Managed by:** Secretarial staff
-- **Contains:** Marketing content, blog, FAQs, support chat widget (bottom-right), **onboarding wizard** (`/get-started`)
+- **Contains:** Marketing content, blog, FAQs, support chat widget (bottom-right), **onboarding wizard** (`/get-started`), **public loan tracking page** (`/track-application`)
 - **Onboarding role:** Hosts the multi-step "Get Started" wizard that collects client registration data and submits it to the Laravel registration API. Fetches dynamic dropdown options (Location, Gender, Employment Type, etc.) from Laravel's `/options/*` endpoints.
-- **Does NOT contain:** Business data, PII storage, financial information — the wizard collects and forwards data to Laravel but does not persist it
+- **Tracking role:** Hosts a public "Track Application" page where users enter a tracking number to view non-sensitive loan status information. Consumes Laravel's `GET /api/v1/loans/track/{reference}` endpoint. Returns only whitelisted public fields (status, package name, beneficiary initials, dates) — no financial amounts or PII. See [Public Loan Tracking](../features/public-loan-tracking.md).
+- **Does NOT contain:** Business data, PII storage, financial information — the wizard collects and forwards data to Laravel but does not persist it; the tracking page displays API responses but does not store them
 
 ### Laravel (Core Application)
 - **Purpose:** All business operations
@@ -78,7 +79,7 @@ EduFin operates as a dual-platform ecosystem with strict separation of concerns:
 | AI Agents → Laravel | HTTPS REST + SSH | Product data, audit logging, health monitoring |
 | AI Agents → External | HTTPS + SMTP/IMAP + SSH | Social media (X/Twitter, Facebook, Instagram, TikTok, LinkedIn, YouTube), email, WhatsApp (WAHA), Git, server access |
 
-> **Note:** WordPress and Laravel are connected by a REST API contract for onboarding. WordPress consumes Laravel's `POST /api/v1/auth/register` endpoint (for registration) and `GET /api/v1/options/*` endpoints (for dynamic dropdown data). The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain. There is no SSO and no shared sessions — the registration API is consumer-agnostic (WordPress today, mobile apps in the future).
+> **Note:** WordPress and Laravel are connected by a REST API contract for onboarding and public loan tracking. WordPress consumes Laravel's `POST /api/v1/auth/register` endpoint (for registration), `GET /api/v1/options/*` endpoints (for dynamic dropdown data), and `GET /api/v1/loans/track/{reference}` endpoint (for public status lookups). The REST API at `edufin.co.ke/api/v1` is served by Laravel via Nginx path routing on the main domain. There is no SSO and no shared sessions — the registration and tracking APIs are consumer-agnostic (WordPress today, mobile apps in the future).
 >
 > **AI Agents Layer:** The AI Agents module is a non-invasive intelligence layer that interacts with both WordPress and Laravel through their existing APIs and SSH access. It does not modify core business logic or access PII/financial data. See [AI Agents Architecture](./ai-agents/README.md) for full details.
 

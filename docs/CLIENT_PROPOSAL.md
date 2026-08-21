@@ -343,7 +343,9 @@ CURRENT (Single Server)          FUTURE (Separate Servers)
 │  │     • Blog/News section                                                │  │
 │  │     • FAQ page with categorized questions                              │  │
 │  │     • Contact page with form integration                               │  │
-│  │     • Legal pages (Terms & Conditions, Privacy Policy)                 │  │
+│  │     • Legal pages (Terms & Conditions, Privacy Policy, Data Protection,     │  │
+│  │       Cookie Policy, Refund & Cancellation, Complaints & Disputes,          │  │
+│  │       Regulatory & Licensing)                                               │  │
 │  │     • SEO optimization (Yoast SEO configuration)                       │  │
 │  │     • Performance optimization (caching, image optimization)           │  │
 │  │     • Live chat widget integration                                     │  │

@@ -1,7 +1,7 @@
 # EduFin - Site Links Reference
 
-**Version:** 2.0  
-**Last Updated:** August 10, 2026
+**Version:** 2.1  
+**Last Updated:** August 21, 2026
 
 ---
 
@@ -33,15 +33,23 @@ EduFin operates as two separate systems with a clearly defined API contract betw
 | `https://edufin.co.ke/` | Home | Landing page |
 | `https://edufin.co.ke/products` | Products | Education financing packages |
 | `https://edufin.co.ke/how-it-works` | How It Works | Process explanation |
-| `https://edufin.co.ke/calculator` | Calculator | Loan calculator widget |
+| `https://edufin.co.ke/loan-calculator` | Loan Calculator | Loan calculator widget |
 | `https://edufin.co.ke/blog` | Blog | Articles, news, announcements |
 | `https://edufin.co.ke/get-started` | Get Started (Onboarding) | Multi-step client onboarding wizard |
-| `https://edufin.co.ke/contact` | Contact | Contact form and details |
-| `https://edufin.co.ke/about` | About Us | Company information |
+| `https://edufin.co.ke/track-application` | Track Application | Public loan status lookup by tracking number (no login required) |
+| `https://edufin.co.ke/contact-us` | Contact Us | Contact form and details |
+| `https://edufin.co.ke/about-us` | About Us | Company information |
 | `https://edufin.co.ke/faq` | FAQs | Help content |
+| `https://edufin.co.ke/help-center` | Help Center | Support articles and guides |
 | `https://edufin.co.ke/testimonials` | Testimonials | Client reviews |
-| `https://edufin.co.ke/terms` | Terms | Terms and conditions |
-| `https://edufin.co.ke/privacy` | Privacy Policy | Privacy policy |
+| `https://edufin.co.ke/document-checklist` | Document Checklist | Required documents for loan applications |
+| `https://edufin.co.ke/terms-conditions` | Terms & Conditions | Terms and conditions |
+| `https://edufin.co.ke/privacy-policy` | Privacy Policy | Privacy policy |
+| `https://edufin.co.ke/data-protection` | Data Protection | Data protection policy (Kenya DPA 2019 compliance) |
+| `https://edufin.co.ke/cookie-policy` | Cookie Policy | Cookie usage and management policy |
+| `https://edufin.co.ke/refund-policy` | Refund & Cancellation | Refund and cancellation policy |
+| `https://edufin.co.ke/complaints` | Complaints & Disputes | Complaints handling and dispute resolution procedure |
+| `https://edufin.co.ke/regulatory` | Regulatory & Licensing | Regulatory status and licensing disclosure |
 
 ### 1.2 WordPress Admin
 
@@ -58,7 +66,40 @@ These are hyperlinks rendered in the WordPress header. The "Get Started" link no
 |------------|------------|---------|
 | Login | `https://app.edufin.co.ke/login` | Client/staff login (role-based redirect after auth) |
 | Get Started | `https://edufin.co.ke/get-started` | New client onboarding wizard (WordPress; submits to Laravel API) |
-| Client Portal | `https://app.edufin.co.ke/login` | External application login (footer + topbar link) |
+| Track Application | `https://edufin.co.ke/track-application` | Public loan status lookup (WordPress page; consumes Laravel tracking API) |
+| Client Portal | `https://app.edufin.co.ke/login` | External application login (footer Quick Links) |
+
+### 1.4 Footer Structure
+
+The WordPress footer is organized into five columns. The link sections are:
+
+**Quick Links:**
+1. ↗Client Portal (external — `app.edufin.co.ke/login`)
+2. How It Works (`/how-it-works/`)
+3. Loan Calculator (`/loan-calculator/`)
+4. Document Checklist (`/document-checklist/`)
+
+*Financing Options (dynamic — populated from financing_package CPT, featured-first)*
+
+**Company:**
+1. About Us (`/about-us/`)
+2. Blog & News (`/blog/`)
+3. Testimonials (`/testimonials/`)
+
+**Support (self-service → human escalation flow):**
+1. Help Center (`/help-center/`)
+2. FAQs (`/faq/`)
+3. Track Application (`/track-application/`)
+4. Contact Us (`/contact-us/`)
+
+**Legal:**
+1. Terms & Conditions (`/terms-conditions/`)
+2. Privacy Policy (`/privacy-policy/`)
+3. Data Protection (`/data-protection/`)
+4. Cookie Policy (`/cookie-policy/`)
+5. Refund & Cancellation (`/refund-policy/`)
+6. Complaints & Disputes (`/complaints/`)
+7. Regulatory & Licensing (`/regulatory/`)
 
 ---
 
@@ -188,6 +229,7 @@ The registration process is split across the two platforms: **WordPress** acts a
 | GET | `https://edufin.co.ke/api/v1/packages` | List financing packages |
 | GET | `https://edufin.co.ke/api/v1/packages/{slug}` | Package details |
 | GET | `https://edufin.co.ke/api/v1/calculator/rates` | Loan calculator rates |
+| GET | `https://edufin.co.ke/api/v1/loans/track/{reference}` | Public loan status lookup by tracking number (no auth; 20 req/min/IP) |
 | GET | `https://edufin.co.ke/api/v1/options/locations` | List locations (counties/cities) for onboarding dropdowns |
 | GET | `https://edufin.co.ke/api/v1/options/genders` | List gender options for onboarding dropdowns |
 | GET | `https://edufin.co.ke/api/v1/options/employment-types` | List employment types for onboarding dropdowns |
@@ -292,7 +334,11 @@ The registration process is split across the two platforms: **WordPress** acts a
 edufin.co.ke
 ├── /                          → WordPress (PHP-FPM 8.2)
 ├── /get-started               → WordPress (onboarding wizard; submits to Laravel API)
-├── /products, /blog, /about   → WordPress (PHP-FPM 8.2)
+├── /track-application         → WordPress (public loan tracking; consumes Laravel tracking API)
+├── /products, /blog, /about-us   → WordPress (PHP-FPM 8.2)
+├── /terms-conditions, /privacy-policy, /data-protection,
+│   /cookie-policy, /refund-policy, /complaints, /regulatory
+│                                → WordPress (legal pages, PHP-FPM 8.2)
 ├── /wp-admin, /wp-login.php   → WordPress (PHP-FPM 8.2)
 └── /api/                      → Laravel (PHP-FPM 8.3) [reverse proxy]
 
@@ -322,3 +368,4 @@ cdn.edufin.co.ke
 | 1.0 | 2026-08-06 | EduFin Technical Team | Initial site links reference |
 | 1.1 | 2026-08-06 | EduFin Technical Team | API moved to edufin.co.ke/api/v1 path-based routing; admin.edufin.co.ke removed (admin at app.edufin.co.ke/admin); login at app.edufin.co.ke/login with role-based redirect; onboarding at app.edufin.co.ke/register |
 | 2.0 | 2026-08-10 | EduFin Technical Team | Registration architecture change: Laravel no longer hosts a front-end /register page (API-only registration via POST /api/v1/auth/register). WordPress now hosts the onboarding wizard at edufin.co.ke/get-started. Added /options/* endpoints for dynamic dropdowns. Laravel UI limited to /login, /forgot-password, /password/reset. |
+| 2.1 | 2026-08-21 | EduFin Technical Team | Added 4 new legal pages: Cookie Policy, Refund & Cancellation, Complaints & Disputes, Regulatory & Licensing. Fixed page slugs to match actual URLs (terms→terms-conditions, privacy→privacy-policy, about→about-us, contact→contact-us, calculator→loan-calculator). Added Help Center and Document Checklist pages. Added footer structure documentation (Quick Links, Support, Legal sections). |

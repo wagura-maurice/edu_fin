@@ -37,8 +37,11 @@ docs/
 │   ├── README.md                       # API overview
 │   ├── authentication.md               # Auth endpoints
 │   ├── clients.md                      # Client endpoints
-│   ├── loans.md                        # Loan endpoints
+│   ├── loans.md                        # Loan endpoints (incl. public tracking)
 │   └── webhooks.md                     # Webhook specifications
+│
+├── features/                           # Feature specifications
+│   └── public-loan-tracking.md         # Public loan tracking (WordPress UI + Laravel API)
 │
 ├── security/                           # Security documentation
 │   ├── README.md                       # Security overview
@@ -69,6 +72,7 @@ docs/
 - [API Documentation](./api/README.md) - API reference
 - [Developer Setup](./guides/developer-setup.md) - Development environment
 - [AI Agents Architecture](./architecture/ai-agents/README.md) - Agentic intelligence layer
+- [Public Loan Tracking](./features/public-loan-tracking.md) - WordPress tracking page + Laravel API spec
 
 ### For Operations
 - [Deployment Guide](./deployment/README.md) - Infrastructure & deployment

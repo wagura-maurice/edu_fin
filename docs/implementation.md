@@ -98,9 +98,15 @@ wordpress/wp-content/themes/edufin/
 ├── style.css                    # Theme metadata & styles
 ├── functions.php                # Theme setup & hooks
 ├── header.php                   # Site header
-├── footer.php                   # Site footer
+├── footer.php                   # Site footer (5-column: brand, quick links, company/support/legal, contact)
 ├── front-page.php               # Homepage template
 ├── page.php                     # Generic page template
+├── page-legal.php               # Generic legal page template (Terms & Conditions, Privacy Policy)
+├── page-data-protection.php     # Data Protection page (Kenya DPA 2019 compliance)
+├── page-cookie-policy.php       # Cookie Policy page
+├── page-refund-policy.php       # Refund & Cancellation Policy page
+├── page-complaints.php          # Complaints & Dispute Resolution page
+├── page-regulatory.php          # Regulatory & Licensing Disclosure page
 ├── single.php                   # Blog post template
 ├── archive.php                  # Blog archive
 ├── template-parts/
@@ -118,10 +124,10 @@ wordpress/wp-content/themes/edufin/
 
 ### 2.3 Custom Plugins
 
-WordPress does not consume Laravel APIs. The login and registration buttons on WordPress link directly to the Laravel portal via standard HTML links:
+WordPress consumes Laravel APIs for onboarding (registration) and dynamic options. The login button links to the Laravel portal; registration is handled by the WordPress onboarding wizard which submits to the Laravel API:
 
 - **Login:** `app.edufin.co.ke/login`
-- **Register:** `app.edufin.co.ke/register`
+- **Register (onboarding wizard):** `edufin.co.ke/get-started` (submits to `edufin.co.ke/api/v1/auth/register`)
 
 ### 2.4 Configuration
 
